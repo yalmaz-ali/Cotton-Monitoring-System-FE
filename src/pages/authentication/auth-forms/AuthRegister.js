@@ -52,9 +52,15 @@ const AuthRegister = () => {
 
   const handleSignup = async () => {
     setOpenLoading(true);
-    const body = { username: name, email, password };
+    const body = {
+    };
     try {
-      const response = await axois.post('http://localhost:8000/auth/register/', { body });
+      const response = await axois.post('http://localhost:8000/auth/register/', {
+        username: name,
+        email: email,
+        password: password,
+
+      });
 
       if (response.status === 200) {
         console.log('User registered successfully!');
