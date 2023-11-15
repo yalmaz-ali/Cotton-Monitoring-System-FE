@@ -1,9 +1,6 @@
-import MainLayout from "layout/MainLayout/index";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 // import MDSnackbar from "components/MDSnackbar";
-import FieldModal from "components/AddFieldModal";
 import Map from "./component/Map";
 import RenderFields from "pages/components-overview/component/Fields/RenderFields";
 import LoadingScreen from "components/LoadingScreen";
@@ -16,8 +13,6 @@ const Fields = ({
 }) => {
 
   const [openLoading, setOpenLoading] = useState(false);
-
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [selectedFarmId, setSelectedFarmId] = useState(farm);
   const [selectedSeasonId, setSelectedSeasonId] = useState(season);
@@ -43,8 +38,7 @@ const Fields = ({
   const [selectedValue, setSelectedValue] = useState("Without Values");
 
 
-  const [drawPolygon, setDrawPolygon] = useState(false);
-
+  const [drawingManager, setDrawingManager] = useState(null);
 
   const [successSB, setSuccessSB] = useState(false);
   const [errorSB, setErrorSB] = useState(false);
@@ -65,11 +59,6 @@ const Fields = ({
   let ndviColor = "black";
   let selectedPolygon = null; // Track the selected polygon
   // let fieldPolygon; // Define fieldPolygon here
-
-  const handleDrawPolygon = (value) => {
-    console.log("value:", value);
-    setDrawPolygon(value); // Update the selected Value
-  };
 
   const handleEdit = (value, id) => {
     console.log("value:", value);
@@ -105,15 +94,12 @@ const Fields = ({
 
   };
 
-  const handleCoordinatesChange = (newCoordinates) => {
-    setCoordinates(newCoordinates); // Update the coordinates
-  };
   const handleMapLoad = (map) => {
     setMainMap(map); // Update the map reference
   };
-
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
+  const handleDrawingManager = (drawingManager) => {
+    console.log("drawingManager:", drawingManager);
+    setDrawingManager(drawingManager); // Update the drawingManager reference
   };
 
   const handleFieldSubmission = async (fieldName) => {
@@ -159,7 +145,6 @@ const Fields = ({
 
       // Reset the state and close the dialog
       // setCoordinates([]);
-      handleCloseDialog();
     } else {
       openWarningSB();
     }
@@ -436,7 +421,7 @@ const Fields = ({
   }
 
   function addNDVIMarker(position, ndviValue) {
-    let value = null;
+    let value = " ";
     const labelOptions = {
       text: value, // Set the label text
       fontSize: '12px', // Adjust the font size as needed
@@ -1209,8 +1194,6 @@ const Fields = ({
   //   };
   // }, [apiKey, jwtToken]);
 
-  // Use a separate useEffect for resetting the mainMap when selectedFarmId or selectedSeasonId changes
-
   useEffect(() => {
     ClearMap();
     if (!selectedSeasonId) {
@@ -1256,6 +1239,104 @@ const Fields = ({
   }, [filling, value])
 
 
+
+
+
+  let [selectedShape, setSelectedShape] = useState(null);
+
+  function clearSelection() {
+    if (selectedShape) {
+      selectedShape.setEditable(false);
+      setSelectedShape(null);
+    }
+  }
+
+  function setSelection(shape) {
+    clearSelection();
+    setSelectedShape(shape);
+    shape.setEditable(true);
+  }
+
+  const deleteSelectedShape = () => {
+    if (selectedShape) {
+      selectedShape.setMap(null);
+      coordinates.splice(0, coordinates.length)
+      setFlagFieldComplete(false);
+    }
+  }
+
+  const addSelectedShape = () => {
+    // setIsDialogOpen(true);
+    // deleteSelectedShape();
+    selectedShape.setMap(null);
+    setFlagFieldComplete(false);
+  }
+
+
+
+
+  var getPolygonCoords = function (newShape) {
+
+    coordinates.splice(0, coordinates.length)
+
+    var len = newShape.getPath().getLength();
+
+    for (var i = 0; i < len; i++) {
+      coordinates.push(newShape.getPath().getAt(i).toUrlValue(4))
+    }
+    console.log(coordinates)
+
+    // document.getElementById('info').innerHTML = coordinates
+
+
+  }
+
+  const [flagFieldComplete, setFlagFieldComplete] = useState(false);
+
+  if (drawingManager) {
+
+    window.google.maps.event.addListener(drawingManager, 'polygoncomplete', function (event) {
+
+      // mainMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].push(centerControlDiv);
+      // mainMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].push(centerControlDiv2);
+
+      console.log("polygon");
+      setFlagFieldComplete(true);
+      event.getPath().getLength();
+      window.google.maps.event.addListener(event, "dragend", getPolygonCoords(event));
+
+      window.google.maps.event.addListener(event.getPath(), 'insert_at', function () {
+        getPolygonCoords(event)
+      });
+
+      window.google.maps.event.addListener(event.getPath(), 'set_at', function () {
+        getPolygonCoords(event)
+      })
+    })
+
+    window.google.maps.event.addListener(drawingManager, 'overlaycomplete', function (event) {
+      // all_overlays.push(event);
+      setFlagFieldComplete(true);
+      // console.log(all_overlays);
+
+      drawingManager.setDrawingMode(null);
+
+      var newShape = event.overlay;
+      newShape.type = event.type;
+      window.google.maps.event.addListener(newShape, 'click', function () {
+        console.log("clicked");
+        setSelection(newShape);
+      });
+      setSelection(newShape);
+
+    })
+  }
+
+
+
+
+
+
   return (
     <>
       <div style={{
@@ -1265,24 +1346,23 @@ const Fields = ({
       }}>
         <RenderFields
           fieldData={dataField}
-          drawPolygon={handleDrawPolygon}
           deleteField={deleteField}
           edit={handleEdit}
           editedField={handleEditField}
           handleFieldClick={handleFieldClick}
+          drawingManager={drawingManager}
+          flagFieldComplete={flagFieldComplete}
+          deleteSelectedShape={deleteSelectedShape}
+          addSelectedShape={addSelectedShape}
+          onSubmit={(fieldName) => handleFieldSubmission(fieldName)}
+
         />
         <Map
-          handleCoordinatesChange={handleCoordinatesChange}
-          setIsDialogOpen={setIsDialogOpen}
+          // handleCoordinatesChange={handleCoordinatesChange}
+          // setIsDialogOpen={setIsDialogOpen}
           handleMapLoad={handleMapLoad}
+          handleDrawingManager={handleDrawingManager}
         />
-        <div>
-          <FieldModal
-            open={isDialogOpen}
-            onClose={handleCloseDialog}
-            onSubmit={(fieldName) => handleFieldSubmission(fieldName)}
-          />
-        </div>
         {/* {renderSuccessSB}
         {renderErrorSB}
         {renderWarningSB} */}

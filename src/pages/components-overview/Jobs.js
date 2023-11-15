@@ -14,6 +14,10 @@ const Jobs = ({ farm, season }) => {
   const handleMapLoad = (map) => {
     setMainMap(map); // Update the map reference
   };
+  const handleDrawingManager = (drawingManager) => {
+    // Update the drawing manager reference
+    drawingManager.setDrawingMode(null);
+  };
 
   return (
     <>
@@ -30,6 +34,7 @@ const Jobs = ({ farm, season }) => {
           handleCoordinatesChange={handleCoordinatesChange}
           setIsDialogOpen={setIsDialogOpen}
           handleMapLoad={handleMapLoad}
+          handleDrawingManager={handleDrawingManager}
         />
       </div>
     </>
