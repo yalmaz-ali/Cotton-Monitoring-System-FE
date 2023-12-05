@@ -502,7 +502,7 @@ const RenderJobs = ({ farm, season }) => {
                 display: "flex",
                 flexDirection: "column",
                 backgroundColor: "#eeeff2",
-                width: "25%",
+                width: "30%",
                 height: "100%",
                 boxShadow: "inset -10px 0px 10px -10px rgba(0,0,0,0.5)",
             }}

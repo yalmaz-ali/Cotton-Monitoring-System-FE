@@ -1,6 +1,4 @@
-import Cookies from 'js-cookie';
-import { React, useState, useEffect } from 'react';
-import { useNavigate } from "react-router-dom";
+import { React, useEffect } from 'react';
 
 function Map({
     handleMapLoad,
@@ -22,7 +20,6 @@ function Map({
         var mainMap = new window.google.maps.Map(document.getElementById("mapcanvas"), mapOptions);
         handleMapLoad(mainMap);
 
-
         var drawingManager = new window.google.maps.drawing.DrawingManager({
             drawingControlOptions: {
                 position: window.google.maps.ControlPosition.TOP_CENTER,
@@ -34,8 +31,11 @@ function Map({
                 clickable: true,
                 draggable: false,
                 editable: true,
-                fillColor: '#ffff00',
-                fillOpacity: 0.5,
+                fillOpacity: 0,
+                strokeColor: 'yellow',
+                strokeOpacity: 1,
+                strokeWeight: 2,
+                zIndex: 1
             },
             drawingMode: null,
             Map: mainMap
@@ -137,7 +137,8 @@ function Map({
     return (
         <div id="mapcanvas" style={{
             height: "100%",
-            width: "75%"
+            width: "70%",
+            position: "relative"
         }}>
         </div>
     );

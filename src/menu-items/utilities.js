@@ -23,21 +23,21 @@ const utilities = {
       id: 'util-color',
       title: 'Field',
       type: 'item',
-      url: '/field',
-      icon: fieldIcon,
+      url: '/Field',
+      icon: AppstoreAddOutlined,
     },
     {
-      id: 'util-crop-rotation',
+      id: 'util-CropRotation',
       title: 'Crop Rotation',
       type: 'item',
-      url: '/crop-rotation',
-      icon: crop_rotation
+      url: '/CropRotation',
+      icon: AntDesignOutlined
     },
     {
       id: 'util-jobs',
       title: 'Jobs',
       type: 'item',
-      url: '/jobs',
+      url: '/Jobs',
       icon: jobs
     },
     {

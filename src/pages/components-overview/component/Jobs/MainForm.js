@@ -10,50 +10,55 @@ function MainForm(props) {
             position: "relative",
             flex: 1
         }}>
-            <div style={{
-                display: "flex",
-                minHeight: "90%",
-                flexDirection: "column",
-                padding: "10px"
-            }}>
-
-                {props.jobs.length > 0 ?
-                    props.jobs.map((job) => (
+            {props.jobs.length > 0 ?
+                <div style={{
+                    minHeight: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    boxSizing: "border-box",
+                }}>
+                    {props.jobs.map((job) => (
                         <JobCard
                             key={job.id}
                             job={job}
                             DeleteJob={props.DeleteJob}
                             EditClick={props.handleEditJobClick}
                         />
-                    ))
-                    :
-                    <h3
-                        style={{
-                            color: "#9e9e9e",
-                            textAlign: "center",
-                            margin: "0px",
-                            padding: "0px",
-                            marginTop: "20px"
-                        }}
-                    > No JOBS
+                    ))}
+                </div>
+                :
+                <div style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "calc(100% - 50px)",
+                }}>
+                    <h3>
+                        No Jobs
                     </h3>
-                }
-            </div>
-
+                </div>
+            }
             <div style={{
                 position: "sticky",
                 bottom: "0px",
                 backgroundColor: "#eeeff2",
-                padding: "10px",
                 display: "flex",
                 justifyContent: "center",
                 zIndex: 2,
                 boxShadow: "1px -3px 10px -10px rgba(0,0,0,0.5)"
             }}>
-                <Button variant="contained" color="error" style={{ borderRadius: "5%" }} onClick={props.handleAddJobClick}>
+                <Button
+                    variant="contained"
+                    fullWidth
+                    style={{
+                        margin: "5px",
+                        color: "white",
+                    }}
+                    onClick={props.handleAddJobClick}
+                >
                     <AddIcon />
                     <Typography variant="subtitle1" component="div" style={{ color: "white", fontSize: "17px" }}>
-                        FIELD JOB
+                        Field Job
                     </Typography>
                 </Button>
             </div>

@@ -1,11 +1,44 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Paper, Typography, Card, CardContent, Divider } from '@mui/material';
+import { Grid, Paper, Typography, Card, CardContent, Divider, Button, Menu, MenuItem, TextField, IconButton } from '@mui/material';
 import axios from 'axios';
 import LoadingScreen from 'components/LoadingScreen';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 
 function RenderHistory({ selectedFarmId }) {
     const [openLoading, setOpenLoading] = useState(false);
     const [data, setData] = useState([]);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [cropNameInput, setCropNameInput] = useState('');
+
+    const handleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+        setCropNameInput('');
+    };
+
+    const handleCropNameChange = (event) => {
+        setCropNameInput(event.target.value);
+    };
+
+    const handleCropNameSubmit = async () => {
+        setOpenLoading(true);
+        try {
+            const response = await axios.post(`http://localhost:8000/api/farm/assignCrop/${selectedFarmId}/`, {
+                cropName: cropNameInput
+            }, { withCredentials: true });
+            console.log("responsee", response.data.data);
+            fetchData();
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setOpenLoading(false);
+            handleClose();
+        }
+    };
+
 
     const fetchData = async () => {
         setOpenLoading(true);
@@ -47,12 +80,33 @@ function RenderHistory({ selectedFarmId }) {
                     // justifyContent: 'center',
                     // alignItems: 'center'
                 }}>
-                    <Typography variant="h2" style={{ fontWeight: 'bold' }}>Crop Rotation</Typography>
+                    <Typography
+                        variant="h2"
+                        style={{
+                            fontWeight: 'bold',
+                            marginBottom: '16px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                        }}
+                    >
+                        Crop Rotation
+                    </Typography>
                     <Divider style={{ margin: '16px 0' }} />
                     {data.map((field) => (
                         <Card key={field.fieldId} style={{ margin: '16px 0' }}>
                             <CardContent style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography variant="subtitle1">{field.fieldName}</Typography>
+                                <Typography
+                                    variant="subtitle1"
+                                    style={{
+                                        fontWeight: 'bold',
+                                        textOverflow: 'ellipsis',
+                                        overflow: 'hidden',
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {field.fieldName}
+                                </Typography>
                                 <Typography>ID: {field.fieldId}</Typography>
                             </CardContent>
                         </Card>
@@ -83,21 +137,105 @@ function RenderHistory({ selectedFarmId }) {
                                     const crop = field.cropRotation.find(crop => crop.season.name === season);
                                     return (
                                         <Card key={field.fieldId} style={{ margin: '16px 0' }}>
-                                            <CardContent style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <CardContent style={{
+                                                display: 'flex',
+                                                alignItems: "center",
+                                                height: '61.97px',
+                                                width: '137.44px',
+                                                position: 'relative',
+                                            }}>
                                                 {crop ?
-                                                    <Typography>
-                                                        {crop.cropName}
-                                                    </Typography>
+                                                    <>
+                                                        {
+                                                            crop.cropName ?
+                                                                <>
+                                                                    <Typography
+                                                                        style={{
+                                                                            fontWeight: 'bold',
+                                                                            textOverflow: 'ellipsis',
+                                                                            overflow: 'hidden',
+                                                                            whiteSpace: 'nowrap',
+                                                                            width: '100px' // Adjust this value as neede
+                                                                        }}
+                                                                    >
+                                                                        {crop.cropName}
+                                                                    </Typography>
+                                                                    <IconButton
+                                                                        style={{
+                                                                            position: 'absolute',
+                                                                            top: -5,
+                                                                            right: -5,
+                                                                            color: 'red',
+                                                                            borderBottomLeftRadius: 20,
+                                                                        }}
+                                                                    // onClick={() => handleDelete(field.fieldId, seasonId)}
+                                                                    >
+                                                                        <RemoveCircleOutlineIcon
+                                                                            fontSize="small"
+                                                                            color="error"
+
+                                                                        />
+                                                                    </IconButton>
+                                                                </>
+                                                                :
+                                                                <>
+                                                                    <Button onClick={handleClick}>
+                                                                        Assign Crop
+                                                                    </Button>
+                                                                    <Menu
+                                                                        anchorEl={anchorEl}
+                                                                        keepMounted
+                                                                        open={Boolean(anchorEl)}
+                                                                        onClose={handleClose}
+                                                                    >
+                                                                        <MenuItem disableRipple
+
+                                                                        >
+                                                                            <TextField
+                                                                                autoFocus
+                                                                                label="Crop Name"
+                                                                                type="text"
+                                                                                fullWidth
+                                                                                value={cropNameInput}
+                                                                                onChange={handleCropNameChange}
+                                                                                onKeyPress={(event) => {
+                                                                                    if (event.key === 'Enter') {
+                                                                                        handleCropNameSubmit();
+                                                                                    }
+                                                                                }}
+                                                                            />
+                                                                        </MenuItem>
+                                                                        <MenuItem disableRipple
+
+                                                                        >
+                                                                            <Button
+                                                                                fullWidth
+                                                                                style={{ backgroundColor: '#4caf50', color: 'white' }}
+                                                                                onClick={handleCropNameSubmit}
+                                                                            >
+                                                                                Submit
+                                                                            </Button>
+                                                                        </MenuItem>
+                                                                    </Menu>
+                                                                </>
+                                                        }
+                                                    </>
                                                     :
-                                                    <Typography
-                                                        style={{ color: 'red' }}
-                                                    >
-                                                        Null
-                                                    </Typography>
+                                                    <>
+                                                        <Typography
+                                                            style={{
+                                                                color: '#585858',
+                                                                fontWeight: 'bold',
+                                                                fontSize: '13px'
+                                                            }}
+                                                        >
+                                                            The Field is not in this season
+                                                        </Typography>
+
+                                                    </>
                                                 }
                                             </CardContent>
-                                        </Card>
-                                    );
+                                        </Card>);
                                 })}
                             </Paper>
                         </Grid>

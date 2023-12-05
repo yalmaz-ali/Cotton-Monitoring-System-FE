@@ -10,8 +10,11 @@ function ValueDropdownMenu({ onValueSelect }) {
     const handleChange = (event) => {
         const selected = event.target.value;
         setValue(selected);
-        onValueSelect(selected); // Notify parent component
     };
+
+    useEffect(() => {
+        onValueSelect(value); // Notify parent component
+    }, [value]);
 
     return (
         <Box sx={{ minWidth: 140 }}>

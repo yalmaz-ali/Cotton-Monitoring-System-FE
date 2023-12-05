@@ -8,7 +8,8 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import axios from "axios";
 import Cookies from "js-cookie";
-// import MDSnackbar from "components/MDSnackbar";
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 
 function AddFarmModal({ open, onClose, farmAdded }) {
     const [farmName, setFarmName] = useState("");
@@ -24,54 +25,63 @@ function AddFarmModal({ open, onClose, farmAdded }) {
     const openWarningSB = () => setWarningSB(true);
     const closeWarningSB = () => setWarningSB(false);
 
-    useEffect(() => {
-        if (!open) {
-            // Reset the fieldName only when the dialog is opened
-            setFarmName("");
-        }
-    }, [open]);
+    const Alert = React.forwardRef(function Alert(props, ref) {
+        return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+    });
 
-    // const renderSuccessSB = (
-    //     <MDSnackbar
-    //         color="success"
-    //         icon="check"
-    //         title="Farm Added"
-    //         content="Your Farm is added!"
-    //         // dateTime="11 mins ago"
-    //         open={successSB}
-    //         onClose={closeSuccessSB}
-    //         close={closeSuccessSB}
-    //         bgWhite
-    //     />
-    // );
+    const renderSuccessSB = (
+        <Snackbar
+            open={successSB}
+            autoHideDuration={4000}
+            onClose={closeSuccessSB}
+            anchorOrigin={{
+                vertical: "top",
+                horizontal: "right",
+            }}
+            key={'success'}
+            close={closeSuccessSB}
+        >
+            <Alert onClose={closeSuccessSB} severity="success" sx={{ width: '100%' }}>
+                Farm Added!
+            </Alert>
+        </Snackbar>
+    );
 
-    // const renderErrorSB = (
-    //     <MDSnackbar
-    //         color="error"
-    //         icon="warning"
-    //         title="Error"
-    //         content="Your Farm is not added please try again!"
-    //         // dateTime="11 mins ago"
-    //         open={errorSB}
-    //         onClose={closeErrorSB}
-    //         close={closeErrorSB}
-    //         bgWhite
-    //     />
-    // );
+    const renderErrorSB = (
+        <Snackbar
+            open={errorSB}
+            autoHideDuration={4000}
+            onClose={closeErrorSB}
+            anchorOrigin={{
+                vertical: "top",
+                horizontal: "right",
+            }}
+            key={'error'}
+            close={closeErrorSB}
+        >
+            <Alert onClose={closeErrorSB} severity="error" sx={{ width: '100%' }}>
+                Your Farm is not added please try again!
+            </Alert>
+        </Snackbar>
+    );
 
-    // const renderWarningSB = (
-    //     <MDSnackbar
-    //         color="warning"
-    //         icon="star"
-    //         title="Warning"
-    //         content="Please Enter Farm Name!"
-    //         // dateTime="11 mins ago"
-    //         open={warningSB}
-    //         onClose={closeWarningSB}
-    //         close={closeWarningSB}
-    //         bgWhite
-    //     />
-    // );
+    const renderWarningSB = (
+        <Snackbar
+            open={warningSB}
+            autoHideDuration={4000}
+            onClose={closeWarningSB}
+            anchorOrigin={{
+                vertical: "top",
+                horizontal: "right",
+            }}
+            key={'warning'}
+            close={closeWarningSB}
+        >
+            <Alert onClose={closeWarningSB} severity="warning" sx={{ width: '100%' }}>
+                Please Enter Farm Name!
+            </Alert>
+        </Snackbar>
+    );
 
 
 
@@ -107,6 +117,13 @@ function AddFarmModal({ open, onClose, farmAdded }) {
         }
     };
 
+    useEffect(() => {
+        if (!open) {
+            // Reset the fieldName only when the dialog is opened
+            setFarmName("");
+        }
+    }, [open]);
+
     return (
         <>
             <Dialog open={open} onClose={onClose}>
@@ -132,9 +149,9 @@ function AddFarmModal({ open, onClose, farmAdded }) {
                     </Button>
                 </DialogActions>
             </Dialog>
-            {/* {renderSuccessSB}
+            {renderSuccessSB}
             {renderErrorSB}
-            {renderWarningSB} */}
+            {renderWarningSB}
         </>
     );
 }

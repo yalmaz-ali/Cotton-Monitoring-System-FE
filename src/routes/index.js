@@ -15,6 +15,7 @@ const AuthRegister = Loadable(lazy(() => import('pages/authentication/Register')
 const Jobs = Loadable(lazy(() => import('pages/components-overview/Jobs')));
 const Fields = Loadable(lazy(() => import('pages/components-overview/Fields')));
 const CropRotation = Loadable(lazy(() => import('pages/components-overview/CropRotation')));
+const About = Loadable(lazy(() => import('pages/components-overview/About')));
 
 
 function ThemeRoutes() {
@@ -34,10 +35,10 @@ function ThemeRoutes() {
     children: [
       {
         path: '/',
-        element: <Navigate to="/field" replace />
+        element: <Navigate to="/Field" replace />
       },
       {
-        path: 'field',
+        path: 'Field',
         element: <Fields
           farm={farm}
           season={season}
@@ -46,13 +47,13 @@ function ThemeRoutes() {
         />
       },
       {
-        path: 'crop-rotation',
+        path: 'CropRotation',
         element: <CropRotation
           farm={farm}
         />
       },
       {
-        path: 'jobs',
+        path: 'Jobs',
         element: <Jobs
           farm={farm}
           season={season}
@@ -60,7 +61,7 @@ function ThemeRoutes() {
       },
       {
         path: 'about',
-        element: <div>About</div>
+        element: <About />
       },
       {
         path: 'logout',

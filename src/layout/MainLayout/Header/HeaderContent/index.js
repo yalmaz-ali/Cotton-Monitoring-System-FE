@@ -11,6 +11,7 @@ import MobileSection from './MobileSection';
 import FarmDropdownMenu from "components/FarmDropdownMenu";
 import FillingDropdownMenu from "components/FillingDropdownMenu";
 import ValueDropdownMenu from "components/ValueDropdownMenu";
+import Calendar from 'components/Calendar/Calendar';
 // import MDSnackbar from 'components/MDSnackbar/index';
 
 
@@ -18,6 +19,8 @@ import ValueDropdownMenu from "components/ValueDropdownMenu";
 
 const HeaderContent = ({ onFarmSelect, onFillingSelect, onValueSelect, selectedFarm }) => {
   const location = useLocation();
+
+  const [filling, setFilling] = useState('No Filling');
 
   const openWarningSB = () => setWarningSB(true);
   const closeWarningSB = () => setWarningSB(false);
@@ -30,6 +33,11 @@ const HeaderContent = ({ onFarmSelect, onFillingSelect, onValueSelect, selectedF
   const handleFarmSelected = (farm) => {
     selectedFarm(farm);
     onFarmSelect(farm.id); // Call the callback to update selected farm ID in Dashboard
+  };
+
+  const hanldeFillingSelect = (filling) => {
+    onFillingSelect(filling);
+    setFilling(filling);
   };
 
   // const renderWarningSB = (
@@ -64,11 +72,11 @@ const HeaderContent = ({ onFarmSelect, onFillingSelect, onValueSelect, selectedF
 
       {/* {renderWarningSB} */}
 
-      {location.pathname !== '/crop-rotation' && (
+      {location.pathname !== '/CropRotation' && (
         <>
           {/* <Tooltip title="Select Filling" placement="bottom" TransitionComponent={Zoom} > */}
           <Box marginRight={1} >
-            <FillingDropdownMenu onFillingSelect={onFillingSelect} />
+            <FillingDropdownMenu onFillingSelect={hanldeFillingSelect} />
           </Box >
           {/* </Tooltip> */}
           {/* <Tooltip title="Select Value" placement="bottom" TransitionComponent={Zoom}> */}
@@ -78,6 +86,9 @@ const HeaderContent = ({ onFarmSelect, onFillingSelect, onValueSelect, selectedF
           {/* </Tooltip> */}
         </>
       )}
+      {(filling === 'NDVI' || filling === 'Contrasted NDVI') &&
+        <Calendar />
+      }
       {/* {!matchesXs && <Profile />} */}
       {matchesXs && <MobileSection />}
     </>

@@ -44,8 +44,8 @@ const Header = ({ open, handleDrawerToggle, onFarmSelect, onFillingSelect, onVal
     color: 'inherit',
     elevation: 0,
     sx: {
-      borderBottom: `1px solid ${theme.palette.divider}`
-      // boxShadow: theme.customShadows.z1
+      borderBottom: `1px solid ${theme.palette.divider}`,
+      boxShadow: theme.customShadows.z1
     }
   };
 

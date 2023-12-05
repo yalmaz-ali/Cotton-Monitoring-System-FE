@@ -150,7 +150,7 @@ const Profile = () => {
 
     return {
       sx: {
-        bgcolor: '#a1defb',
+        bgcolor: '#407274',
       },
       children: initials,
     };

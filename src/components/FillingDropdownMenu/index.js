@@ -10,8 +10,11 @@ function FillingDropdownMenu({ onFillingSelect }) {
     const handleChange = (event) => {
         const selected = event.target.value;
         setFilling(selected);
-        onFillingSelect(selected); // Notify parent component
     };
+
+    useEffect(() => {
+        onFillingSelect(filling); // Notify parent component
+    }, [filling]);
 
     return (
         <Box sx={{ minWidth: 140 }}>

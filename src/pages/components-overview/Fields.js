@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 // import MDSnackbar from "components/MDSnackbar";
 import Map from "./component/Map";
 import RenderFields from "pages/components-overview/component/Fields/RenderFields";
 import LoadingScreen from "components/LoadingScreen";
+import PalleteBar from "components/PalleteBar/index";
+import { createRoot } from 'react-dom/client';
 
 const Fields = ({
   farm,
@@ -11,6 +13,7 @@ const Fields = ({
   filling,
   value,
 }) => {
+  const paletteBarRef = useRef(null);
 
   const [openLoading, setOpenLoading] = useState(false);
 
@@ -35,7 +38,7 @@ const Fields = ({
   const [dataField, setDataField] = useState([]);
 
   const [selectedFilling, setSelectedFilling] = useState("No Filling");
-  const [selectedValue, setSelectedValue] = useState("Without Values");
+  const [selectedValue, setSelectedValue] = useState("No Value");
 
 
   const [drawingManager, setDrawingManager] = useState(null);
@@ -54,9 +57,11 @@ const Fields = ({
 
   // let mainMap;
   const gridSpacing = 0.000065; // Adjust the spacing as needed
-  const points = [];
+  var points = [];
 
   let ndviColor = "black";
+  let cropColor = "white";
+
   let selectedPolygon = null; // Track the selected polygon
   // let fieldPolygon; // Define fieldPolygon here
 
@@ -71,12 +76,12 @@ const Fields = ({
     });
   };
 
-  const handleEditField = (id, name) => {
+  const handleEditField = (id, name, cropName) => {
     console.log("id:", id);
     console.log("name:", name);
     polygons.forEach((polygon) => {
       if (polygon.id === id) {
-        updateField(polygon, name);
+        updateField(polygon, name, cropName);
       }
     });
   };
@@ -102,7 +107,7 @@ const Fields = ({
     setDrawingManager(drawingManager); // Update the drawingManager reference
   };
 
-  const handleFieldSubmission = async (fieldName) => {
+  const handleFieldSubmission = async (fieldName, cropName) => {
     setOpenLoading(true); // start loading screen
 
     console.log("Field Name:", fieldName);
@@ -129,7 +134,8 @@ const Fields = ({
 
         const newField = {
           ...data.Field,
-          isCalculating: true
+          isCalculating: true,
+          cropName: cropName,
         };
         // setIsCalculating(true);
         setFieldData([...fieldData, newField]);
@@ -139,8 +145,8 @@ const Fields = ({
       } catch (error) {
         console.error("Error adding farm:", error);
         openErrorSB();
-      } finally {
         setOpenLoading(false); // stop loading screen
+
       }
 
       // Reset the state and close the dialog
@@ -150,7 +156,7 @@ const Fields = ({
     }
   };
 
-  const calculateNDVIAndFieldGrid = async (fieldId, fieldPoints) => {
+  const calculateNDVIAndFieldGrid = async (fieldId, fieldPoints, cropName) => {
     setOpenLoading(true); // start loading
 
     // Define the data to be sent in the POST request
@@ -164,14 +170,14 @@ const Fields = ({
       Field_Data: {
         season: selectedSeasonId, // Replace with the actual selected season ID
         coordinates: JSON.stringify(formattedCoords), // Replace with your coordinates data
-        crop_name: "Cotton", // Replace with the actual crop name or retrieve it from your state
+        crop_name: cropName,
       },
       Field_Grid: {
         lat_lng: JSON.stringify(fieldPoints), // Replace with your coordinates data
       },
     };
     console.log("sent........");
-    if (formattedCoords && fieldPoints) {
+    if (formattedCoords && fieldPoints && cropName) {
       try {
         // Send a POST request to initiate NDVI and field_grid calculation
         const response = await axios.post(`http://localhost:8000/api/field/putStats/${fieldId}/`, requestData, { withCredentials: true });
@@ -185,6 +191,7 @@ const Fields = ({
       }
 
     } else {
+      setOpenLoading(false); // stop loading screen
       console.log("Unfilled Data");
     }
   };
@@ -208,7 +215,6 @@ const Fields = ({
       console.log("response dataaa:", response.data);
       setFieldData(response.data.fields_data);
       setDataField(response.data.fields_data);
-      console.log("fetch fieldData:", response.data);
       if (response.data.fields_data.length === 0) {
         ClearMap();
       }
@@ -233,31 +239,62 @@ const Fields = ({
     }
   };
 
-  async function updateField(fieldPolygon, name) {
+  function arraysEqual(a, b) {
+    return a.length === b.length && a.every((val, index) => val.lat === b[index].lat && val.lng === b[index].lng);
+  }
+
+  async function updateField(fieldPolygon, name, crop_name) {
     setOpenLoading(true); // start loading screen
+    var data = null;
+    console.log("fieldPolygon", fieldPolygon);
 
-    // Extract the updated coordinates from the polygon's path
     const updatedCoordinates = fieldPolygon.getPath().getArray().map(coord => ({
-      lat: parseFloat(coord.lat()).toFixed(4),
-      lng: parseFloat(coord.lng()).toFixed(4)
+      lat: parseFloat(parseFloat(coord.lat()).toFixed(4)),
+      lng: parseFloat(parseFloat(coord.lng()).toFixed(4))
     }));
+    console.log("fieldPolygon.coordinates.length", fieldPolygon.coordinates);
+    console.log("updatedCoordinates.length", updatedCoordinates);
 
-    console.log(name);
-    console.log(updatedCoordinates);
-
-    const data = {
-      "Field": {
-        "name": name
-      },
-      "Field_Data": {
-        "coordinates": JSON.stringify(updatedCoordinates),
-        "crop_name": "CotMuttton"
+    if (arraysEqual(fieldPolygon.coordinates, updatedCoordinates)) {
+      console.log("same");
+      data = {
+        "Field": {
+          "name": name
+        },
+        "Field_Data": {
+          "crop_name": crop_name
+        },
+        "Field_Grid": {
+        }
       }
+
+    } else {
+      console.log("not same");
+      points = CalculatePoints(updatedCoordinates);
+      data = {
+        "Field": {
+          "name": name
+        },
+        "Field_Data": {
+          "coordinates": JSON.stringify(updatedCoordinates),
+          "crop_name": crop_name
+        },
+        "Field_Grid": {
+          "lat_lng": JSON.stringify(points)
+        }
+      }
+
     }
+
+    // console.log(name);
+    // console.log(crop_name);
+    // console.log(updatedCoordinates);
+
     if (infoWindow) {
       infoWindow.close();
     }
     fieldPolygon.setEditable(false);
+    console.log("data:", data);
     // Send a patch request to update the polygon data
     try {
       const response = await axios.patch(`http://localhost:8000/api/field/patchField/${fieldPolygon.id}/${selectedSeasonId}/`, data, { withCredentials: true });
@@ -269,95 +306,196 @@ const Fields = ({
     } finally {
       setOpenLoading(false); // stop loading screen
     }
+    setOpenLoading(false); // stop loading screen
 
   }
 
-  function getColor(ndvi) {
+  function getAvgNdviColor(ndvi) {
     const colorScale = [
-      { value: -1, color: "#FF0000" },   // Red for very low NDVI
-      { value: -0.8, color: "#FF3300" }, // Red-Orange
-      { value: -0.6, color: "#FF6600" }, // Orange
-      { value: -0.4, color: "#FF9900" }, // Orange-Yellow
-      { value: -0.2, color: "#FFCC00" }, // Yellow
-      { value: 0, color: "#FFFF00" },    // Yellow-Green
-      { value: 0.2, color: "#CCFF00" },  // Green-Yellow
-      { value: 0.4, color: "#99FF00" },  // Green
-      { value: 0.6, color: "#66FF00" },  // Green-Light Green
-      { value: 0.8, color: "#33FF00" },  // Light Green
-      { value: 1, color: "#00FF00" }     // Bright Green for high NDVI
+      { min: 0, max: 0.09, color: "#422112" },
+      { min: 0.1, max: 0.14, color: "#7f4020" },
+      { min: 0.15, max: 0.19, color: "#b76135" },
+      { min: 0.2, max: 0.24, color: "#c6974e" },
+      { min: 0.25, max: 0.29, color: "#e6c957" },
+      { min: 0.3, max: 0.34, color: "#fdfe03" },
+      { min: 0.35, max: 0.39, color: "#e6ec06" },
+      { min: 0.4, max: 0.44, color: "#d0df00" },
+      { min: 0.45, max: 0.49, color: "#b9cf02" },
+      { min: 0.5, max: 0.54, color: "#a2c000" },
+      { min: 0.55, max: 0.59, color: "#8aaf00" },
+      { min: 0.6, max: 0.64, color: "#72a000" },
+      { min: 0.65, max: 0.69, color: "#5b8e03" },
+      { min: 0.7, max: 0.74, color: "#458100" },
+      { min: 0.75, max: 0.79, color: "#2d7000" },
+      { min: 0.8, max: 0.84, color: "#25602d" },
+      { min: 0.85, max: 0.89, color: "#15542d" },
+      { min: 0.9, max: 0.94, color: "#15442d" },
+      { min: 0.95, max: 1.00, color: "#113a26" }
     ];
 
     for (const scale of colorScale) {
-      if (ndvi <= scale.value) {
+      if (ndvi >= scale.min && ndvi <= scale.max) {
         return scale.color;
       }
     }
 
     return "#000000"; // Default color for undefined NDVI values
+  };
+
+  function getCropColor(cropName) {
+    const cropColors = {
+      "Alfalfa": "#FFA07A",
+      "Apple": "#7FFF00",
+      "Apricot": "#FF4500",
+      "Artichoke": "#20B2AA",
+      "Asparagus": "#00CED1",
+      "Avocado": "#32CD32",
+      "Banana": "#FFD700",
+      "Barley": "#DAA520",
+      "Bean": "#8A2BE2",
+      "Beet": "#DC143C",
+      "Blackberry": "#8B008B",
+      "Blackgram": "#FF6347",
+      "Blueberry": "#4169E1",
+      "Broccoli": "#00FF00",
+      "Brussels Sprouts": "#228B22",
+      "Cabbage": "#7CFC00",
+      "Cantaloupe": "#FF8C00",
+      "Carrot": "#FFA500",
+      "Cauliflower": "#FFFACD",
+      "Cherry": "#FF69B4",
+      "Chickpea": "#9932CC",
+      "Coconut": "#FFE4C4",
+      "Coffee": "#A0522D",
+      "Cotton": "#FF0000",
+      "Cranberry": "#DCDCDC",
+      "Cucumber": "#00FFFF",
+      "Date Palm": "#800080",
+      "Eggplant": "#9370DB",
+      "Fig": "#FF1493",
+      "Garlic": "#2E8B57",
+      "Ginger": "#FFFF00",
+      "Grapes": "#4B0082",
+      "Hazelnut": "#FF8C69",
+      "Jute": "#008080",
+      "Kale": "#7B68EE",
+      "Kiwi": "#8B4513",
+      "Lemon": "#F0E68C",
+      "Lentil": "#DDA0DD",
+      "Lettuce": "#90EE90",
+      "Lychee": "#F08080",
+      "Maize": "#FF7F50",
+      "Mango": "#FFB6C1",
+      "Moth Beans": "#800000",
+      "Mung Bean": "#66CDAA",
+      "Muskmelon": "#FF00FF",
+      "Nectarine": "#FA8072",
+      "No Crop": "#dadada",
+      "Olive": "#808000",
+      "Onion": "#8ea2f0",
+      "Orange": "#fcad1b",
+      "Other Crop": "#FFFFFF",
+      "Papaya": "#FFEFD5",
+      "Peach": "#FFDAB9",
+      "Pear": "#E9967A",
+      "Pigeon Peas": "#105a03",
+      "Pineapple": "#FFE4B5",
+      "Plum": "#ed593f",
+      "Pomegranate": "#ff0000",
+      "Potato": "#be6141",
+      "Quinoa": "#F0FFF0",
+      "Raspberry": "#c532e9",
+      "Rice": "#938175",
+      "Soybean": "#2c7823",
+      "Spinach": "#104316",
+      "Sugarcane": "#7760a8",
+      "Strawberry": "#ff595e",
+      "Sweet Potato": "#D2691E",
+      "Taro": "#c0bebe",
+      "Tomato": "#e4180e",
+      "Walnut": "#A52A2A",
+      "Watermelon": "#418125",
+      "Wheat": "#F5DEB3",
+      "Yam": "#68a4a8",
+      "Zucchini": "#1e0ead"
+    };
+
+    return cropName ? (cropColors[cropName] || "white") : "white";
   }
 
-  // Function to map NDVI values to colors with a custom palette
   function getColorBasedOnNDVI(ndvi) {
-    // Define a custom color palette with 50 shades from yellow to green
-    const colorPalette = [
-      'rgb(255, 255, 0)',
-      'rgb(254, 255, 0)',
-      'rgb(253, 255, 0)',
-      'rgb(252, 255, 0)',
-      'rgb(251, 255, 0)',
-      'rgb(250, 255, 0)',
-      'rgb(249, 255, 0)',
-      'rgb(248, 255, 0)',
-      'rgb(247, 255, 0)',
-      'rgb(246, 255, 0)',
-      'rgb(245, 255, 0)',
-      'rgb(244, 255, 0)',
-      'rgb(243, 255, 0)',
-      'rgb(242, 255, 0)',
-      'rgb(241, 255, 0)',
-      'rgb(240, 255, 0)',
-      'rgb(239, 255, 0)',
-      'rgb(238, 255, 0)',
-      'rgb(237, 255, 0)',
-      'rgb(236, 255, 0)',
-      'rgb(235, 255, 0)',
-      'rgb(234, 255, 0)',
-      'rgb(233, 255, 0)',
-      'rgb(232, 255, 0)',
-      'rgb(231, 255, 0)',
-      'rgb(230, 255, 0)',
-      'rgb(229, 255, 0)',
-      'rgb(228, 255, 0)',
-      'rgb(227, 255, 0)',
-      'rgb(226, 255, 0)',
-      'rgb(225, 255, 0)',
-      'rgb(224, 255, 0)',
-      'rgb(223, 255, 0)',
-      'rgb(222, 255, 0)',
-      'rgb(221, 255, 0)',
-      'rgb(220, 255, 0)',
-      'rgb(219, 255, 0)',
-      'rgb(218, 255, 0)',
-      'rgb(217, 255, 0)',
-      'rgb(216, 255, 0)',
-      'rgb(215, 255, 0)',
-      'rgb(214, 255, 0)',
-      'rgb(213, 255, 0)',
-      'rgb(212, 255, 0)',
-      'rgb(211, 255, 0)',
-      'rgb(210, 255, 0)',
-      'rgb(0, 245, 0)', // Green
+    // Define the color stops for the gradient
+    const colorStops = [
+      { stop: 0, color: '#350801' },
+      { stop: 0.0556, color: '#7e1805' },
+      { stop: 0.1111, color: '#af3a03' },
+      { stop: 0.1667, color: '#ecb225' },
+      { stop: 0.2222, color: '#fcd731' },
+      { stop: 0.2778, color: '#fee85f' },
+      { stop: 0.3333, color: '#fefe00' },
+      { stop: 0.3889, color: '#f2f900' },
+      { stop: 0.4444, color: '#c4e700' },
+      { stop: 0.5, color: '#97d500' },
+      { stop: 0.5556, color: '#5fc100' },
+      { stop: 0.6111, color: '#379f00' },
+      { stop: 0.6667, color: '#1c8300' },
+      { stop: 0.7222, color: '#0b6400' },
+      { stop: 0.7778, color: '#064b0a' },
+      { stop: 0.8333, color: '#033a0f' },
+      { stop: 0.8889, color: '#02310c' },
+      { stop: 0.9444, color: '#02310c' },
     ];
 
-    // Normalize NDVI values to the palette length
-    const normalizedNDVI = (ndvi + 1) / 2; // Normalize from [-1, 1] to [0, 1]
+    // Find the appropriate stops for the given NDVI value
+    let minStop, maxStop;
+    for (let i = 0; i < colorStops.length - 1; i++) {
+      if (ndvi >= colorStops[i].stop && ndvi <= colorStops[i + 1].stop) {
+        minStop = colorStops[i];
+        maxStop = colorStops[i + 1];
+        break;
+      }
+    }
 
-    // Calculate the index in the color palette
-    const paletteIndex = Math.floor(normalizedNDVI * (colorPalette.length - 1));
+    if (!minStop || !maxStop) {
+      return '#FFFFFF'; // Return white for invalid cases
+    }
 
-    // Return the color from the palette
-    return colorPalette[paletteIndex];
+    // Calculate the percentage interpolation between the stops
+    const percentage =
+      ((ndvi - minStop.stop) / (maxStop.stop - minStop.stop)) * 100 || 0;
+
+    // Interpolate color based on percentage between stops
+    const color = interpolateColor(minStop.color, maxStop.color, percentage);
+
+    return color;
   }
+  // Function to interpolate color between two colors based on percentage
+  function interpolateColor(startColor, endColor, percentage) {
+    const getColorComponent = (start, end) =>
+      Math.round(start + (end - start) * (percentage / 100));
+
+    const startRGB = hexToRgb(startColor);
+    const endRGB = hexToRgb(endColor);
+
+    const interpolatedColor = {
+      r: getColorComponent(startRGB.r, endRGB.r),
+      g: getColorComponent(startRGB.g, endRGB.g),
+      b: getColorComponent(startRGB.b, endRGB.b),
+    };
+
+    return `rgb(${interpolatedColor.r}, ${interpolatedColor.g}, ${interpolatedColor.b})`;
+  }
+
+  // Function to convert hex color to RGB object
+  function hexToRgb(hex) {
+    const bigint = parseInt(hex.slice(1), 16);
+    return {
+      r: (bigint >> 16) & 255,
+      g: (bigint >> 8) & 255,
+      b: bigint & 255,
+    };
+  }
+
 
   // const renderSuccessSB = (
   //   <MDSnackbar
@@ -428,6 +566,7 @@ const Fields = ({
     };
     if (typeof ndviValue === 'number' || typeof ndviValue === 'string') {
       value = (typeof ndviValue === 'number') ? ndviValue.toFixed(3) : ndviValue;
+      value = value.length > 12 ? value.substring(0, 10) + '...' : value; // Truncate the string if it's longer than 10 characters
       labelOptions.text = value; // Set the label text
       labelOptions.color = 'black'; // Set the text color to white
     }
@@ -469,6 +608,7 @@ const Fields = ({
     // Clear the NDVI markers array
     setNdviMarkers([]);
 
+    console.log("gridPolygons", gridPolygons);
     // Clear the previous NDVI markers
     gridPolygons.forEach((polygon) => {
       polygon.setMap(null);
@@ -478,6 +618,39 @@ const Fields = ({
     setGridPolygons([]);
 
   };
+
+  function CalculatePoints(polygonCoordinates) {
+    // Calculate grid points within the polygon
+    console.log("polygonCoordinates:", polygonCoordinates);
+    const polygonBounds = new window.google.maps.LatLngBounds();
+    const points = [];
+    polygonCoordinates.forEach((coord) => {
+      polygonBounds.extend(coord);
+    });
+
+    for (
+      let lat = polygonBounds.getSouthWest().lat() + gridSpacing / 2;
+      lat <= polygonBounds.getNorthEast().lat();
+      lat += gridSpacing
+    ) {
+      for (
+        let lng = polygonBounds.getSouthWest().lng() + gridSpacing / 2;
+        lng <= polygonBounds.getNorthEast().lng();
+        lng += gridSpacing
+      ) {
+        const point = { lat, lng };
+        if (typeof lat === "number" && typeof lng === "number") {
+          const latLng = new window.google.maps.LatLng(lat, lng);
+          if (window.google.maps.geometry.poly.containsLocation(latLng, new window.google.maps.Polygon({ paths: polygonCoordinates }))) {
+            points.push(point);
+          }
+        }
+      }
+    }
+    return points;
+  }
+
+
 
   function RenderFieldData() {
     ClearMap();
@@ -493,33 +666,8 @@ const Fields = ({
         lng: parseFloat(coord.lng),
       }));
 
-      // Calculate grid points within the polygon
-      const polygonBounds = new window.google.maps.LatLngBounds();
-
-      polygonCoordinates.forEach((coord) => {
-        polygonBounds.extend(coord);
-      });
-
-      for (
-        let lat = polygonBounds.getSouthWest().lat() + gridSpacing / 2;
-        lat <= polygonBounds.getNorthEast().lat();
-        lat += gridSpacing
-      ) {
-        for (
-          let lng = polygonBounds.getSouthWest().lng() + gridSpacing / 2;
-          lng <= polygonBounds.getNorthEast().lng();
-          lng += gridSpacing
-        ) {
-          const point = { lat, lng };
-          if (typeof lat === "number" && typeof lng === "number") {
-            const latLng = new window.google.maps.LatLng(lat, lng);
-            if (window.google.maps.geometry.poly.containsLocation(latLng, new window.google.maps.Polygon({ paths: polygonCoordinates }))) {
-              points.push(point);
-            }
-          }
-        }
-      }
-
+      points = CalculatePoints(polygonCoordinates);
+      console.log("points:", points);
       // Store grid points within the field object
       field.points = points;
 
@@ -529,8 +677,8 @@ const Fields = ({
 
 
       if (hasAvgNDVI) {
-        ndviColor = getColor(field.Field_Data.avg_ndvi);
-
+        ndviColor = getAvgNdviColor(field.Field_Data.avg_ndvi);
+        cropColor = getCropColor(field.Field_Data.crop_name);
 
         if (selectedFilling === "No Filling") {
           fieldPolygon = new window.google.maps.Polygon({
@@ -545,12 +693,11 @@ const Fields = ({
         } else if (selectedFilling === "Average NDVI") {
           fieldPolygon = new window.google.maps.Polygon({
             paths: polygonCoordinates,
-            strokeColor: ndviColor,
+            strokeColor: "black",
             strokeOpacity: 1,
-            strokeWeight: 2,
+            strokeWeight: 1,
             fillColor: ndviColor,
             fillOpacity: 1,
-            // editable: true,
             clickable: true
           });
         } else if (selectedFilling === "NDVI") {
@@ -560,20 +707,20 @@ const Fields = ({
           if (field_Grid !== undefined && field_Grid.length > 0) {
             fieldPolygon = new window.google.maps.Polygon({
               paths: polygonCoordinates,
-              strokeColor: "blue",
-              clickable: false,
+              strokeColor: "yellow",
+              clickable: true,
+              zIndex: 2,
+              fillOpacity: 0,
             });
-            RendergridData(field_Grid);
+            RendergridData(field_Grid, fieldPolygon);
           } else {
             fieldPolygon = new window.google.maps.Polygon({
               paths: polygonCoordinates,
-              strokeColor: "red",
+              strokeColor: "yellow",
               strokeOpacity: 1,
               strokeWeight: 2,
-              fillColor: "red",
               fillOpacity: 0,
-              // editable: true,
-              // clickable: true
+              clickable: false,
             });
           }
         } else if (selectedFilling === "Contrasted NDVI") {
@@ -583,32 +730,29 @@ const Fields = ({
           if (field_Grid !== undefined && field_Grid.length > 0) {
             fieldPolygon = new window.google.maps.Polygon({
               paths: polygonCoordinates,
-              strokeColor: "blue",
-              clickable: false,
+              strokeColor: "yellow",
+              clickable: true,
             });
-            RendergridData(field_Grid);
+            RendergridData(field_Grid, fieldPolygon);
           } else {
             fieldPolygon = new window.google.maps.Polygon({
               paths: polygonCoordinates,
-              strokeColor: "red",
+              strokeColor: "yellow",
               strokeOpacity: 1,
               strokeWeight: 2,
-              fillColor: "red",
               fillOpacity: 0,
-              // editable: true,
-              // clickable: true
+              clickable: false,
             });
           }
         } else if (selectedFilling === "Crop") {
           // Display fields with crop-based filling
           fieldPolygon = new window.google.maps.Polygon({
             paths: polygonCoordinates,
-            strokeColor: ndviColor,
+            strokeColor: "black",
             strokeOpacity: 1,
-            strokeWeight: 2,
-            fillColor: ndviColor,
+            strokeWeight: 1,
+            fillColor: cropColor,
             fillOpacity: 1,
-            // editable: true,
             clickable: true
           });
         }
@@ -653,13 +797,47 @@ const Fields = ({
       // fieldPolygon.selected = false; // Add this line inside the loop
 
       // Add a click event listener to each polygon
-      fieldPolygon.addListener("click", () => {
-        if (selectedPolygon) {
-          selectedPolygon.setEditable(false); // Make the previously selected polygon not editable
-        }
-        fieldPolygon.setEditable(true); // Make the clicked polygon editable
+      fieldPolygon.addListener("mousemove", () => {
+        // if (selectedPolygon) {
+        //   selectedPolygon.setEditable(false); // Make the previously selected polygon not editable
+        //   //change the bordercolor of the field polygon back to the original color
+        //   selectedPolygon.setOptions({
+        //     strokeColor: "yellow",
+        //     strokeOpacity: 1,
+        //     strokeWeight: 2,
+        //   });
+        // }
+        // fieldPolygon.setEditable(true); // Make the clicked polygon editable
+        //change the bordercolor of the field polygon to yellow
+        fieldPolygon.setOptions({
+          strokeColor: "white",
+          strokeOpacity: 1,
+          strokeWeight: 3,
+        });
         selectedPolygon = fieldPolygon; // Update the selected polygon
       });
+
+      fieldPolygon.addListener("mouseout", () => {
+        if (selectedPolygon) {
+          // selectedPolygon.setEditable(false); // Make the previously selected polygon not editable
+          //change the bordercolor of the field polygon back to the original color
+          if (selectedFilling === "No Filling" || selectedFilling === "NDVI" || selectedFilling === "Contrasted NDVI") {
+            selectedPolygon.setOptions({
+              strokeColor: "yellow",
+              strokeOpacity: 1,
+              strokeWeight: 2,
+            });
+          } else if (selectedFilling === "Average NDVI" || selectedFilling === "Crop") {
+            selectedPolygon.setOptions({
+              strokeColor: "black",
+              strokeOpacity: 1,
+              strokeWeight: 1,
+            });
+          }
+        }
+      });
+
+
 
       // Add a mouseover or click event listener
       window.google.maps.event.addListener(fieldPolygon, "click", function (event) {
@@ -728,8 +906,9 @@ const Fields = ({
                       <form id="editFormField">
                           <label for="fieldName">Name:</label>
                           <input type="text" id="fieldName" value="${fieldPolygon.fieldName}">
-                          <label for="fieldCoordinates">Coordinates:</label>
-                          <textarea id="fieldCoordinates">${displayCoordinates(fieldPolygon.coordinates)}</textarea>
+                          <label for="cropName">Crop Name:</label>
+                          <input type="text" id="cropName">
+                          <br>
                           <br>
                           <button type="button" id="updateEditBtn">Update</button>
                           <button type="button" id="cancelEditBtn">Cancel</button>
@@ -774,12 +953,13 @@ const Fields = ({
 
             cancelEditBtn.addEventListener("click", function () {
               infoWindow.close();
-              fieldPolygon.setEditable(false);
+              // fieldPolygon.setEditable(false);
             });
 
             updateEditBtn.addEventListener("click", function () {
               const newName = document.getElementById("fieldName").value;
-              updateField(fieldPolygon, newName);
+              const newCropName = document.getElementById("cropName").value;
+              updateField(fieldPolygon, newName, newCropName);
             });
           });
 
@@ -808,8 +988,14 @@ const Fields = ({
     });
     if (mainMap) {
       mainMap.addListener("click", () => {
+
         if (selectedPolygon) {
-          selectedPolygon.setEditable(false);
+          // selectedPolygon.setEditable(false);
+          // selectedPolygon.setOptions({
+          //   strokeColor: "yellow",
+          //   strokeOpacity: 1,
+          //   strokeWeight: 2,
+          // });
           selectedPolygon = null;
         }
         if (infoWindow) {
@@ -869,12 +1055,12 @@ const Fields = ({
 
     // const field = fieldData[fieldData.length - 1];
     console.log("id:", currentField.id);
-    calculateNDVIAndFieldGrid(currentField.id, currentField.points);
+    calculateNDVIAndFieldGrid(currentField.id, currentField.points, currentField.cropName);
     // fetchNDVIForGridPoints(gridPoints);
 
   }
 
-  function RendergridData(gridPoints) {
+  function RendergridData(gridPoints, fieldPolygon) {
     // Once NDVI data is fetched, process gridDataPoints
     gridPoints.forEach((point) => {
       // Parse the lat_lng string into a valid object
@@ -896,16 +1082,23 @@ const Fields = ({
           west: lng - gridSpacing / 2,
         },
         fillColor: color,
-        fillOpacity: 0.7, // Adjust as needed
-        strokeWeight: 1,
-        strokeColor: "black", // No border
-        map: mainMap, // Your map instance
+        fillOpacity: 1, // Adjust as needed
+        strokeWeight: 0,
         zIndex: 1,
+        clickable: true,
       });
-      setGridPolygons((gridPolygons) => [...gridPolygons, rectangle]);
+      // Add rectangles to the main polygon
+      rectangle.setMap(null); // Initially hide the rectangles
 
-      // Add a mouseover event listener to the rectangle
-      rectangle.addListener("mouseover", (event) => {
+      const recPath = new window.google.maps.LatLng(lat, lng);
+      console.log("recPath", recPath);
+      if (window.google.maps.geometry.poly.containsLocation(recPath, fieldPolygon)) {
+        rectangle.setMap(mainMap);
+        setGridPolygons((gridPolygons) => [...gridPolygons, rectangle]);
+      }
+
+
+      rectangle.addListener("mousemove", (event) => {
         if (ndviWindow) {
           ndviWindow.close(); // Close any open InfoWindow
         }
@@ -919,20 +1112,22 @@ const Fields = ({
         });
 
         // Set the InfoWindow position where the mouse hovered over the rectangle
-        ndviWindow.setPosition(event.latLng);
+        // ndviWindow.setPosition(event.latLng);
+        ndviWindow.setPosition(new window.google.maps.LatLng(event.latLng.lat() + 0.00001, event.latLng.lng()));
 
         // Open the InfoWindow on the mainMap
         ndviWindow.open(mainMap);
-      });
 
-      // Add a mouseout event listener to close the InfoWindow when the mouse leaves the rectangle
+      });
+      // Add a mouseout event listener to the map
       rectangle.addListener("mouseout", () => {
         if (ndviWindow) {
           ndviWindow.close(); // Close the InfoWindow
         }
       });
+
     });
-  }
+  };
 
   // Function to start drawing
   // const startDrawing = () => {
@@ -1232,17 +1427,19 @@ const Fields = ({
       console.log("filling:", filling);
       setSelectedFilling(filling);
     }
+  }, [filling])
+
+  useEffect(() => {
     if (value) {
       console.log("value:", value);
       setSelectedValue(value);
     }
-  }, [filling, value])
-
-
+  }, [value])
 
 
 
   let [selectedShape, setSelectedShape] = useState(null);
+  const [latLngCoordinates, setLatLngCoordinates] = useState([]);
 
   function clearSelection() {
     if (selectedShape) {
@@ -1286,8 +1483,7 @@ const Fields = ({
     }
     console.log(coordinates)
 
-    // document.getElementById('info').innerHTML = coordinates
-
+    setLatLngCoordinates(formattedCoordinates(coordinates));
 
   }
 
@@ -1316,7 +1512,6 @@ const Fields = ({
 
     window.google.maps.event.addListener(drawingManager, 'overlaycomplete', function (event) {
       // all_overlays.push(event);
-      setFlagFieldComplete(true);
       // console.log(all_overlays);
 
       drawingManager.setDrawingMode(null);
@@ -1333,6 +1528,38 @@ const Fields = ({
   }
 
 
+  useEffect(() => {
+    const paletteBarDiv = document.createElement('div');
+    paletteBarRef.current = paletteBarDiv;
+
+    const renderPaletteBar = () => {
+      createRoot(paletteBarDiv).render(
+        <PalleteBar filling={selectedFilling} polygons={polygons} />
+      );
+    };
+
+    if (mainMap) {
+      mainMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].push(paletteBarDiv);
+      renderPaletteBar();
+    }
+
+    return () => {
+      if (paletteBarRef.current) {
+        paletteBarRef.current.remove();
+      }
+    };
+  }, [selectedFilling, polygons]);
+
+
+  // useEffect(() => {
+  //   var paletteBarDiv = document.createElement('div');
+  //   ReactDOM.render(<PalleteBar
+  //     filling={selectedFilling}
+  //   />, paletteBarDiv);
+  //   if (mainMap) {
+  //     mainMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].push(paletteBarDiv);
+  //   }
+  // }, [selectedFilling]);
 
 
 
@@ -1342,7 +1569,7 @@ const Fields = ({
       <div style={{
         display: "flex",
         flexDirection: "row",
-        height: "91vh",
+        height: "calc(100vh - 60px)"
       }}>
         <RenderFields
           fieldData={dataField}
@@ -1352,22 +1579,21 @@ const Fields = ({
           handleFieldClick={handleFieldClick}
           drawingManager={drawingManager}
           flagFieldComplete={flagFieldComplete}
+          latLngCoordinates={latLngCoordinates}
           deleteSelectedShape={deleteSelectedShape}
           addSelectedShape={addSelectedShape}
-          onSubmit={(fieldName) => handleFieldSubmission(fieldName)}
+          onSubmit={(fieldName, cropName) => handleFieldSubmission(fieldName, cropName)}
 
         />
         <Map
-          // handleCoordinatesChange={handleCoordinatesChange}
-          // setIsDialogOpen={setIsDialogOpen}
           handleMapLoad={handleMapLoad}
           handleDrawingManager={handleDrawingManager}
         />
         {/* {renderSuccessSB}
         {renderErrorSB}
         {renderWarningSB} */}
-        <LoadingScreen openLoading={openLoading} />
       </div>
+      <LoadingScreen openLoading={openLoading} />
       {/* </MainLayout> */}
     </>
   );

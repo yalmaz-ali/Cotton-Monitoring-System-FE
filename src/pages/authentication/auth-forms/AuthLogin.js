@@ -67,8 +67,8 @@ const AuthLogin = () => {
         // Save the JWT token to local storage or a state management solution
         // localStorage.setItem("jwtToken", jwtToken);
 
-        // Redirect to the dashboard page
-        navigate('/field');
+        // Redirect to the field page
+        navigate('/Field');
       } else {
         // Handle sign-in error
         console.error('Sign-in failed');

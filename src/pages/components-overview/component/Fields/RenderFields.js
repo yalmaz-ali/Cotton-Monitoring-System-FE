@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { Divider, Chip } from "@mui/material";
+import React, { useState } from "react";
 import MainForm from "./MainForm";
 import EditForm from "./EditForm";
 import FieldDrawForm from "./FieldDrawForm";
@@ -12,6 +11,7 @@ const RenderFields = ({
     handleFieldClick,
     drawingManager,
     flagFieldComplete,
+    latLngCoordinates,
     deleteSelectedShape,
     addSelectedShape,
     onSubmit
@@ -23,7 +23,9 @@ const RenderFields = ({
     const [isMain, setIsMain] = useState(true);
 
     const [isEdit, setIsEdit] = useState(false);
-    const [name, setName] = useState('');
+    const [fieldName, setFieldName] = useState('');
+    const [cropName, setCropName] = useState("");
+    const [cropNameToChange, setCropNameToChange] = useState("");
     const [anchorEl, setAnchorEl] = useState(null);
 
     const [isDrawing, setIsDrawing] = useState(false);
@@ -66,23 +68,33 @@ const RenderFields = ({
         setIsEdit(true);
         setIsMain(false);
         edit(true, selectedElement.id);
-        setName(selectedElement.name);
+        console.log("selectedElement", selectedElement);
+        setFieldName(selectedElement.name);
+        setCropName(selectedElement.Field_Data.crop_name);
     };
 
-    const handleNameChange = (event) => {
-        setName(event.target.value);
+    const handleFieldNameChange = (event) => {
+        setFieldName(event.target.value);
     };
+
 
     const handleEditSubmit = async () => {
-        await editedField(selectedElement.id, name);
+        await editedField(selectedElement.id, fieldName, cropNameToChange);
         setIsEdit(false);
         setIsMain(true);
+        // edit(false, selectedElement.id);
+        setFieldName("");
+        setCropName("");
+        setCropNameToChange("");
     };
 
     const handleEditCancel = () => {
         setIsEdit(false);
         setIsMain(true);
         edit(false, selectedElement.id);
+        setFieldName("");
+        setCropName("");
+        setCropNameToChange("");
     };
 
     const handleDelete = () => {
@@ -112,15 +124,25 @@ const RenderFields = ({
         drawingManager.setDrawingMode(null);
     };
 
+
     return (
-        <div style={{ display: "flex", flexDirection: "column", backgroundColor: "#eeeff2", width: "25%", height: "100%", boxShadow: "inset -10px 0px 10px -10px rgba(0,0,0,0.5)" }}>
+        <div style={{
+            display: "flex",
+            flexDirection: "column",
+            backgroundColor: "#eeeff2",
+            width: "30%",
+            height: "100%",
+            boxShadow: "inset -10px 0px 10px -10px rgba(0,0,0,0.5)"
+        }}>
             <div>
                 <h1 style={{ textAlign: "center" }}>Fields</h1>
             </div>
             {isEdit &&
                 <EditForm
-                    name={name}
-                    handleNameChange={handleNameChange}
+                    fieldName={fieldName}
+                    handleFieldNameChange={handleFieldNameChange}
+                    cropName={cropName}
+                    setCropNameToChange={setCropNameToChange}
                     handleEditSubmit={handleEditSubmit}
                     handleEditCancel={handleEditCancel}
                 />
@@ -148,7 +170,11 @@ const RenderFields = ({
                     handleDeleteFieldDraw={handleDeleteFieldDraw}
                     handleAddFieldDraw={handleAddFieldDraw}
                     flagFieldComplete={flagFieldComplete}
+                    latLngCoordinates={latLngCoordinates}
                     onSubmit={onSubmit}
+                    fieldName={fieldName}
+                    setFieldName={setFieldName}
+                    handleFieldNameChange={handleFieldNameChange}
                 />
             }
         </div >
