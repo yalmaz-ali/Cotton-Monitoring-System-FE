@@ -15,8 +15,6 @@ import Header from './Header';
 
 // types
 import { openDrawer } from 'store/reducers/menu';
-import RenderBar from 'pages/components-overview/component/Fields/RenderFields';
-// import Cookies from 'js-cookie';
 
 // ==============================|| MAIN LAYOUT ||============================== //
 
@@ -114,18 +112,6 @@ const MainLayout = ({
           flexGrow: 1,
         }}>
         <Toolbar />
-        {/* <div style={{
-          display: "flex",
-          flexDirection: "row",
-          height: "91vh"
-        }}> */}
-        {/* <RenderBar /> */}
-        {/* <div id="mapcanvas" style={{
-            // height: "100%",
-            width: "75%"
-          }}>
-          </div> */}
-        {/* </div> */}
 
         {/* <Breadcrumbs navigation={menuItems} title /> */}
         <Outlet />

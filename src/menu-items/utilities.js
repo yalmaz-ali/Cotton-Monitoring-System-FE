@@ -7,8 +7,12 @@ import {
   FontSizeOutlined,
   LoadingOutlined,
   RobotOutlined,
+  BookOutlined,
+  LogoutOutlined
 } from '@ant-design/icons';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
+import AutoStoriesOutlinedIcon from '@mui/icons-material/AutoStoriesOutlined';
+
 import fieldIcon from "assets/images/icons/fieldIcon.png";
 import crop_rotation from "assets/images/icons/crop-rotation.png";
 import jobs from "assets/images/icons/jobs.png";
@@ -18,7 +22,6 @@ const utilities = {
   title: ' ',
   type: 'group',
   children: [
-
     {
       id: 'util-color',
       title: 'Field',
@@ -41,12 +44,12 @@ const utilities = {
       icon: jobs
     },
     {
-      id: 'utils-about',
-      title: 'About',
+      id: 'utils-guide',
+      title: 'User Guide',
       type: 'item',
-      url: '/about',
-      icon: RobotOutlined,
-      disabled: true
+      url: '/guide',
+      icon: BookOutlined,
+      // disabled: true
 
     },
     {
@@ -54,9 +57,8 @@ const utilities = {
       title: 'Logout',
       type: 'item',
       url: '/logout',
-      icon: LogoutOutlinedIcon,
+      icon: LogoutOutlined,
       disabled: true
-
     }
   ]
 };

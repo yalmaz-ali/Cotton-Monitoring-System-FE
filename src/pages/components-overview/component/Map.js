@@ -1,35 +1,48 @@
-import { React, useEffect } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import { React, useEffect, useRef } from 'react';
+import { useMediaQuery } from '@mui/material';
 
 function Map({
     handleMapLoad,
     handleDrawingManager,
 }) {
 
-    function InitMap() {
+    const matchesXs = useMediaQuery((theme) => theme.breakpoints.down('md'));
+
+    const mapRef = useRef(null);
+    const searchBoxRef = useRef(null);
+
+    async function InitMap() {
+
+        if (!window.google) {
+            console.error('Google Maps JavaScript API failed to load.');
+            return;
+        }
 
         var Location = new window.google.maps.LatLng(31.402300, 74.210191);
         var mapOptions = {
             zoom: 17,
             center: Location,
             mapTypeId: "hybrid",
-            // mapTypeControl: false, // Set mapTypeControl to false to remove the map type control
+            clickableIcons: false,
+            keyboardShortcuts: false,
+            mapTypeControl: matchesXs ? false : true, // Set mapTypeControl to false to remove the map type control
+            mapTypeControlOptions: {
+                style: window.google.maps.MapTypeControlStyle.DROPDOWN_MENU
+            },
             streetViewControl: false, // Set streetViewControl to false to remove the Pegman control
-            // zoomControlOptions: { position: window.google.maps.ControlPosition.TOP_LEFT } // Set zoomControlOptions to move the zoom controls to the top left corner
+            fullscreenControl: matchesXs ? false : true, // Set fullscreenControl to false to remove the Fullscreen control
         }
 
-        var mainMap = new window.google.maps.Map(document.getElementById("mapcanvas"), mapOptions);
+        var mainMap = new window.google.maps.Map(document.getElementById("map"), mapOptions);
+        mapRef.current = mainMap;
         handleMapLoad(mainMap);
 
         var drawingManager = new window.google.maps.drawing.DrawingManager({
-            drawingControlOptions: {
-                position: window.google.maps.ControlPosition.TOP_CENTER,
-                drawingModes: [
-                    // window.google.maps.drawing.OverlayType.POLYGON,
-                ]
-            },
+            drawingControl: false,
             polygonOptions: {
                 clickable: true,
-                draggable: false,
+                draggable: true,
                 editable: true,
                 fillOpacity: 0,
                 strokeColor: 'yellow',
@@ -44,89 +57,67 @@ function Map({
         handleDrawingManager(drawingManager);
 
 
+        // Create the search box and link it to the UI element.
+        var input = document.getElementById('header-search');
+        var searchBox = new window.google.maps.places.SearchBox(input);
+        searchBoxRef.current = searchBox;
 
+        // Bias the SearchBox results towards current map's viewport.
+        mainMap.addListener('bounds_changed', function () {
+            searchBox.setBounds(mainMap.getBounds());
+        });
 
-        // function CenterControl(controlDiv, mainMap) {
+        // Listen for the event fired when the user selects a prediction and retrieve
+        // more details for that place.
+        searchBox.addListener('places_changed', function () {
+            var places = searchBox.getPlaces();
 
-        //     // Set CSS for the control border.
-        //     var controlUI = document.createElement('div');
-        //     controlUI.style.backgroundColor = '#fff';
-        //     controlUI.style.border = '2px solid #fff';
-        //     controlUI.style.borderRadius = '3px';
-        //     controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
-        //     controlUI.style.cursor = 'pointer';
-        //     controlUI.style.marginBottom = '5px';
-        //     controlUI.style.textAlign = 'center';
-        //     controlUI.style.width = '70px';
-        //     controlUI.style.marginRight = '10px';
-        //     // controlUI.style.display = 'none';
-        //     controlUI.title = 'Select to delete the poygon';
-        //     controlDiv.appendChild(controlUI);
+            if (places.length === 0) {
+                return;
+            }
 
-        //     // Set CSS for the control interior.
-        //     var controlText = document.createElement('div');
-        //     controlText.style.color = 'rgb(25,25,25)';
-        //     controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-        //     controlText.style.fontSize = '13px';
-        //     controlText.style.lineHeight = '28px';
-        //     controlText.style.paddingLeft = '5px';
-        //     controlText.style.paddingRight = '5px';
-        //     controlText.innerHTML = 'Delete';
-        //     controlUI.appendChild(controlText);
+            // For each place, get the icon, name and location.
+            var bounds = new window.google.maps.LatLngBounds();
+            places.forEach(function (place) {
+                if (!place.geometry) {
+                    console.log("Returned place contains no geometry");
+                    return;
+                }
 
-        //     //to delete the polygon
-        //     controlUI.addEventListener('click', function () {
-        //         mainMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].pop();
-        //         mainMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].pop();
-        //         // deleteSelectedShape();
-        //     });
-        // }
+                // Create a marker for each place.
+                // new window.google.maps.Marker({
+                //     map: mainMap,
+                //     title: place.name,
+                //     position: place.geometry.location
+                // });
 
-        // function CenterControl2(controlDiv, mainMap) {
-
-        //     // Set CSS for the control border.
-        //     var addUI = document.createElement('div');
-        //     addUI.style.backgroundColor = '#fff';
-        //     addUI.style.border = '2px solid #fff';
-        //     addUI.style.borderRadius = '3px';
-        //     addUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
-        //     addUI.style.cursor = 'pointer';
-        //     addUI.style.marginBottom = '5px';
-        //     addUI.style.textAlign = 'center';
-        //     addUI.style.width = '70px';
-        //     // addUI.style.display = 'none';
-        //     addUI.title = 'Select to add the shape';
-        //     controlDiv.appendChild(addUI);
-
-        //     // Set CSS for the control interior.
-        //     var addText = document.createElement('div');
-        //     addText.style.color = 'rgb(25,25,25)';
-        //     addText.style.fontFamily = 'Roboto,Arial,sans-serif';
-        //     addText.style.fontSize = '13px';
-        //     addText.style.lineHeight = '28px';
-        //     addText.style.paddingLeft = '5px';
-        //     addText.style.paddingRight = '5px';
-        //     addText.innerHTML = 'Add';
-        //     addUI.appendChild(addText);
-
-        //     //to delete the polygon
-        //     addUI.addEventListener('click', function () {
-        //         // addSelectedShape();
-
-        //     });
-        // }
+                if (place.geometry.viewport) {
+                    // Only geocodes have viewport.
+                    bounds.union(place.geometry.viewport);
+                } else {
+                    bounds.extend(place.geometry.location);
+                }
+            });
+            mainMap.fitBounds(bounds);
+        });
 
 
     };
 
+    useEffect(() => {
+        InitMap().catch(error => {
+            console.error('Failed to initialize map:', error);
+            // Handle error in your app's UI...
+        });
+    }, []);
 
     useEffect(() => {
         // const script = document.createElement("script");
-        // script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=drawing,geometry&callback=InitMap`;
+        // script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBPjBHXmDnGvJULgTBQFScAlMCqGZUe16g&libraries=drawing,geometry&callback=initMap`;
         // script.async = true;
         // script.defer = true;
-        // window.InitMap = InitMap;
         // document.head.appendChild(script);
+        window.initMap = InitMap;
 
         // return () => {
         //     document.head.removeChild(script);
@@ -134,10 +125,11 @@ function Map({
         InitMap();
     }, []);
 
+
     return (
-        <div id="mapcanvas" style={{
+        <div id="map" style={{
             height: "100%",
-            width: "70%",
+            width: matchesXs ? "50%" : "70%",
             position: "relative"
         }}>
         </div>

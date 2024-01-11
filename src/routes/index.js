@@ -6,30 +6,39 @@ import MainLayout from 'layout/MainLayout';
 import { Navigate } from 'react-router-dom';
 import MinimalLayout from 'layout/MinimalLayout';
 
+// render - error
+import NotFoundPage from 'pages/components-overview/component/NotFoundPage';
+
 // render - login
 const AuthLogin = Loadable(lazy(() => import('pages/authentication/Login')));
 const AuthRegister = Loadable(lazy(() => import('pages/authentication/Register')));
 
 
 // render - mainPages
-const Jobs = Loadable(lazy(() => import('pages/components-overview/Jobs')));
-const Fields = Loadable(lazy(() => import('pages/components-overview/Fields')));
-const CropRotation = Loadable(lazy(() => import('pages/components-overview/CropRotation')));
-const About = Loadable(lazy(() => import('pages/components-overview/About')));
+const Jobs = Loadable(lazy(() => import('pages/Jobs/Jobs')));
+const Fields = Loadable(lazy(() => import('pages/Fields/Fields')));
+const CropRotation = Loadable(lazy(() => import('pages/Crop Rotation/CropRotation')));
+const Guide = Loadable(lazy(() => import('pages/Guide/Guide')));
 
 
-function ThemeRoutes() {
+function Routes() {
   const [farm, setFarm] = useState(null);
   const [season, setSeason] = useState(null);
   const [filling, setFilling] = useState(null);
+  const [flag, setFlag] = useState(null);
   const [value, setValue] = useState(null);
+
+  const handleFilling = (filling, flag) => {
+    setFilling(filling);
+    setFlag(flag);
+  };
 
   const MainRoutes = {
     path: '/',
     element: <MainLayout
       onFarmSelect={setFarm}
       onSeasonSelect={setSeason}
-      onFillingSelect={setFilling}
+      onFillingSelect={handleFilling}
       onValueSelect={setValue}
     />,
     children: [
@@ -38,12 +47,13 @@ function ThemeRoutes() {
         element: <Navigate to="/Field" replace />
       },
       {
-        path: 'Field',
+        path: 'Field/:fieldId?/:date?',
         element: <Fields
           farm={farm}
           season={season}
           filling={filling}
           value={value}
+          flag={flag}
         />
       },
       {
@@ -60,14 +70,19 @@ function ThemeRoutes() {
         />
       },
       {
-        path: 'about',
-        element: <About />
+        path: 'guide',
+        element: <Guide />
       },
       {
         path: 'logout',
         element: <div>Logout</div>
       }
     ]
+  };
+
+  const ErrorRoutes = {
+    path: '*',
+    element: < NotFoundPage />
   };
 
   const LoginRoutes = {
@@ -85,7 +100,7 @@ function ThemeRoutes() {
     ]
   };
 
-  return useRoutes([MainRoutes, LoginRoutes]);
+  return useRoutes([MainRoutes, LoginRoutes, ErrorRoutes]);
 }
 
-export default ThemeRoutes;
+export default Routes;

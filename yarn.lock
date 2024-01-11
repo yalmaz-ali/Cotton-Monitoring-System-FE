@@ -2457,9 +2457,9 @@
     "@types/react" "*"
 
 "@types/react@*", "@types/react@^16.8 || ^17.0 || ^18.0", "@types/react@^17.0.0 || ^18.0.0":
-  version "18.2.6"
-  resolved "https://registry.npmjs.org/@types/react/-/react-18.2.6.tgz"
-  integrity sha512-wRZClXn//zxCFW+ye/D2qY65UsYP1Fpex2YXorHc8awoNamkMZSvBxwxdYVInsHOZZd2Ppq8isnSzJL5Mpf8OA==
+  version "17.0.74"
+  resolved "https://registry.npmjs.org/@types/react/-/react-17.0.74.tgz"
+  integrity sha512-nBtFGaeTMzpiL/p73xbmCi00SiCQZDTJUk9ZuHOLtil3nI+y7l269LHkHIAYpav99ZwGnPJzuJsJpfLXjiQ52g==
   dependencies:
     "@types/prop-types" "*"
     "@types/scheduler" "*"
@@ -3553,6 +3553,11 @@ chokidar@^3.4.2, chokidar@^3.5.3:
     readdirp "~3.6.0"
   optionalDependencies:
     fsevents "~2.3.2"
+
+chroma-js@^2.4.2:
+  version "2.4.2"
+  resolved "https://registry.npmjs.org/chroma-js/-/chroma-js-2.4.2.tgz"
+  integrity sha512-U9eDw6+wt7V8z5NncY2jJfZa+hUH8XEj8FQHgFJTrUFnJfXYf4Ml4adI2vXZOjqRDpFWtYVWypDfZwnJ+HIR4A==
 
 chrome-trace-event@^1.0.2:
   version "1.0.3"

@@ -2,6 +2,7 @@
 import { Box, useMediaQuery, Tooltip } from '@mui/material';
 import { useState, useEffect } from "react";
 import { useLocation } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Zoom from '@mui/material/Zoom';
 
 
@@ -19,6 +20,7 @@ import Calendar from 'components/Calendar/Calendar';
 
 const HeaderContent = ({ onFarmSelect, onFillingSelect, onValueSelect, selectedFarm }) => {
   const location = useLocation();
+  const { fieldId } = useParams();
 
   const [filling, setFilling] = useState('No Filling');
 
@@ -35,8 +37,8 @@ const HeaderContent = ({ onFarmSelect, onFillingSelect, onValueSelect, selectedF
     onFarmSelect(farm.id); // Call the callback to update selected farm ID in Dashboard
   };
 
-  const hanldeFillingSelect = (filling) => {
-    onFillingSelect(filling);
+  const hanldeFillingSelect = (filling, flag) => {
+    onFillingSelect(filling, flag);
     setFilling(filling);
   };
 
@@ -56,19 +58,23 @@ const HeaderContent = ({ onFarmSelect, onFillingSelect, onValueSelect, selectedF
 
   return (
     <>
-      {!matchesXs && <Search />}
+      {(location.pathname !== '/CropRotation' && !matchesXs) && (
+        <Search />
+      )}
+
       {/* <Tooltip
         title="Select Farm"
         placement="top"
         TransitionComponent={Zoom}
       > */}
+
+      {/* </Tooltip> */}
+      {<Box sx={{ width: '100%', ml: 1 }} />}
+
       <Box marginRight={1} marginLeft={1}>
         <FarmDropdownMenu onFarmSelect={handleFarmSelected} />
         {/* Add Farm Modal */}
       </Box>
-      {/* </Tooltip> */}
-      {matchesXs && <Box sx={{ width: '100%', ml: 1 }} />}
-
 
       {/* {renderWarningSB} */}
 
@@ -80,13 +86,15 @@ const HeaderContent = ({ onFarmSelect, onFillingSelect, onValueSelect, selectedF
           </Box >
           {/* </Tooltip> */}
           {/* <Tooltip title="Select Value" placement="bottom" TransitionComponent={Zoom}> */}
-          <Box marginRight={1} >
-            <ValueDropdownMenu onValueSelect={onValueSelect} />
-          </Box>
+          {!fieldId &&
+            <Box marginRight={1} >
+              <ValueDropdownMenu onValueSelect={onValueSelect} />
+            </Box>
+          }
           {/* </Tooltip> */}
         </>
       )}
-      {(filling === 'NDVI' || filling === 'Contrasted NDVI') &&
+      {fieldId &&
         <Calendar />
       }
       {/* {!matchesXs && <Profile />} */}

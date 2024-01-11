@@ -1,16 +1,12 @@
-import { useEffect, useState } from 'react';
-// import { Link as RouterLink } from 'react-router-dom';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axois from 'axios';
-// material-ui
+import axios from 'axios';
 import {
   Box,
   Button,
-  // Divider,
   FormControl,
   FormHelperText,
   Grid,
-  // Link,
   IconButton,
   InputAdornment,
   InputLabel,
@@ -18,26 +14,25 @@ import {
   Stack,
   Typography
 } from '@mui/material';
-
-// third party
 import * as Yup from 'yup';
 import { Formik } from 'formik';
-
-// project import
 // import FirebaseSocial from './FirebaseSocial';
 import AnimateButton from 'components/@extended/AnimateButton';
 import { strengthColor, strengthIndicator } from 'utils/password-strength';
-
-// assets
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import LoadingScreen from 'components/LoadingScreen';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 
-// ============================|| FIREBASE - REGISTER ||============================ //
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 const AuthRegister = () => {
+  const navigate = useNavigate();
+
   const [openLoading, setOpenLoading] = useState(false);
 
-  const navigate = useNavigate();
   const [level, setLevel] = useState({});
   const [showPassword, setShowPassword] = useState(false);
 
@@ -47,56 +42,81 @@ const AuthRegister = () => {
 
   const [touched, setTouched] = useState({ username: false, email: false, password: false, submit: false });
   const [errors, setErrors] = useState({ username: '', email: '', password: '', submit: '' });
-  // const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [snackbar, setSnackbar] = useState({ open: false, type: "", message: "" });
 
-  const handleSignup = async () => {
+  const openSnackbar = (type, message) => setSnackbar({ open: true, type, message });
+  const closeSnackbar = () => setSnackbar({ open: false, type: "", message: "" });
+
+  const handleSignup = useCallback(async () => {
     setOpenLoading(true);
-    const body = {
-    };
-    try {
-      const response = await axois.post('http://localhost:8000/auth/register/', {
-        username: name,
-        email: email,
-        password: password,
 
-      });
+    if (errors.username || errors.email || errors.password) {
+      openSnackbar("warning", "Please fill all the fields!");
+      setOpenLoading(false);
+      return;
+    }
+
+    if (errors.email) {
+      openSnackbar("warning", "Please enter a valid email!");
+      setOpenLoading(false);
+      return;
+    }
+
+    const data = {
+      username: name,
+      email: email,
+      password: password,
+    };
+
+    console.log("data", data);
+    try {
+      const response = await axios.post('http://localhost:8000/auth/register/', data);
 
       if (response.status === 200) {
         console.log('User registered successfully!');
-        // Redirect to another page or show a success message
-        // Alert('You have successfully registered! Please log in.');
-
-        // Redirect to login page
+        openSnackbar("success", "User registered successfully!");
         navigate('/auth/login');
       } else {
-        console.error('Registration failed.');
-        // Handle registration error
-        // Alert('Error! User already exists.');
+        console.log('Error! User already exists.');
+        openSnackbar("error", "Error! User already exists.");
       }
     } catch (error) {
-      console.error('An error occurred:', error);
+      console.log("error", error);
+      if (error.response.data.email) {
+        openSnackbar("error", error.response.data.email[0]);
+      } else if (error.response.data.username) {
+        openSnackbar("error", error.response.data.username[0]);
+      } else {
+        openSnackbar("error", "Error! Something went wrong.");
+      }
     } finally {
       setOpenLoading(false);
     }
-  };
+  }, [name, email, password]);
 
-  const handleClickShowPassword = () => {
+  const handleClickShowPassword = useCallback(() => {
     setShowPassword(!showPassword);
-  };
+  }, [showPassword]);
 
-  const handleMouseDownPassword = (event) => {
+  const handleMouseDownPassword = useCallback((event) => {
     event.preventDefault();
-  };
+  }, []);
 
-  const changePassword = (value) => {
+  const changePassword = useCallback((value) => {
     const temp = strengthIndicator(value);
     setLevel(strengthColor(temp));
-  };
+  }, []);
 
   useEffect(() => {
     changePassword('');
-  }, []);
+  }, [changePassword]);
+
+  const validationSchema = useMemo(() => Yup.object().shape({
+    username: Yup.string().max(255).required('UserName is required'),
+    email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
+    password: Yup.string().max(255).required('Password is required')
+  }), []);
 
   return (
     <>
@@ -107,11 +127,7 @@ const AuthRegister = () => {
           password: '',
           submit: null
         }}
-        validationSchema={Yup.object().shape({
-          username: Yup.string().max(255).required('UserName is required'),
-          email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-          password: Yup.string().max(255).required('Password is required')
-        })}
+        validationSchema={validationSchema}
         onSubmit={async (values, { setErrors, setStatus }) => {
           try {
             setStatus({ success: false });
@@ -125,7 +141,7 @@ const AuthRegister = () => {
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Stack spacing={1}>
-              <InputLabel htmlFor="username-signup">Username*</InputLabel>
+              <InputLabel htmlFor="username-signup">Username</InputLabel>
               <OutlinedInput
                 id="username-signup"
                 type="username"
@@ -153,7 +169,7 @@ const AuthRegister = () => {
           </Grid>
           <Grid item xs={12}>
             <Stack spacing={1}>
-              <InputLabel htmlFor="email-signup">Email Address*</InputLabel>
+              <InputLabel htmlFor="email-signup">Email Address</InputLabel>
               <OutlinedInput
                 fullWidth
                 error={Boolean(touched.email && errors.email)}
@@ -162,12 +178,13 @@ const AuthRegister = () => {
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value)
-                  if (e.target.value) {
+                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                  if (e.target.value && emailRegex.test(e.target.value)) {
                     setTouched({ ...touched, email: false });
                     setErrors({ ...errors, email: '' });
                   } else {
                     setTouched({ ...touched, email: true });
-                    setErrors({ ...errors, email: 'Email is required' });
+                    setErrors({ ...errors, email: 'Invalid email address' });
                   }
                 }}
                 placeholder="xyz@gmail.com"
@@ -223,30 +240,34 @@ const AuthRegister = () => {
                 </FormHelperText>
               )}
             </Stack>
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item>
-                  <Box sx={{ bgcolor: level?.color, width: 85, height: 8, borderRadius: '7px' }} />
+            {password && (
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item>
+                    <Box sx={{ bgcolor: level?.color, width: 85, height: 8, borderRadius: '7px' }} />
+                  </Grid>
+                  <Grid item>
+                    <Typography variant="subtitle1" fontSize="0.75rem">
+                      {level?.label}
+                    </Typography>
+                  </Grid>
                 </Grid>
-                <Grid item>
-                  <Typography variant="subtitle1" fontSize="0.75rem">
-                    {level?.label}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </FormControl>
+              </FormControl>
+            )}
           </Grid>
           {errors.submit && (
             <Grid item xs={12}>
               <FormHelperText error>{errors.submit}</FormHelperText>
             </Grid>
           )}
+          {/* <Grid item xs={12}>
+            <FirebaseSocial />
+          </Grid> */}
           <Grid item xs={12}>
             <AnimateButton>
               <Button
                 disableElevation
                 onClick={handleSignup}
-                // disabled={isSubmitting}
                 fullWidth
                 size="large"
                 type="submit"
@@ -259,9 +280,23 @@ const AuthRegister = () => {
           </Grid>
         </Grid>
       </Formik>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={closeSnackbar}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        key={snackbar.type}
+      >
+        <Alert onClose={closeSnackbar} severity={snackbar.type} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
       <LoadingScreen openLoading={openLoading} />
     </>
   );
 };
 
-export default AuthRegister;
+export default React.memo(AuthRegister);

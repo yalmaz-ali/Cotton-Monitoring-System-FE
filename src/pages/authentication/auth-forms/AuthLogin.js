@@ -1,9 +1,6 @@
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-// material-ui
 import {
   Button,
   Checkbox,
@@ -19,22 +16,20 @@ import {
   Stack,
   Typography
 } from '@mui/material';
-
-// third party
 import * as Yup from 'yup';
 import { Formik } from 'formik';
-
-// project import
 // import FirebaseSocial from './FirebaseSocial';
 import AnimateButton from 'components/@extended/AnimateButton';
-
-// assets
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import { useAuth } from 'context/auth-context/AuthContext';
 import LoadingScreen from 'components/LoadingScreen';
 import axios from '../../../../node_modules/axios/index';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 
-// ============================|| FIREBASE - LOGIN ||============================ //
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 const AuthLogin = () => {
   const navigate = useNavigate();
@@ -45,42 +40,77 @@ const AuthLogin = () => {
   const [password, setPassword] = useState('');
   const [touched, setTouched] = useState({ email: false, password: false, submit: false });
   const [errors, setErrors] = useState({ email: '', password: '', submit: '' });
-  // const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [snackbar, setSnackbar] = useState({ open: false, type: "", message: "" });
+
+  const openSnackbar = (type, message) => setSnackbar({ open: true, type, message });
+  const closeSnackbar = () => setSnackbar({ open: false, type: "", message: "" });
 
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
 
-  const handleSignIn = async () => {
+  const handleSignIn = useCallback(async () => {
     setOpenLoading(true);
     const body = { email, password };
+
+    if (errors.email || errors.password) {
+      openSnackbar("error", "Fill in all the fields!");
+      setOpenLoading(false);
+      return;
+    }
+
     try {
-      // Perform sign-in logic and retrieve JWT token from server
       const response = await axios.post('http://localhost:8000/auth/login/', body);
 
       if (response.status === 200) {
+        // Handle successful authentication
+        openSnackbar("success", "Login successful!");
         const data = await response.data;
         const jwtToken = data.jwt;
         console.log(data);
 
         login(jwtToken);
 
-        // Save the JWT token to local storage or a state management solution
-        // localStorage.setItem("jwtToken", jwtToken);
-
         // Redirect to the field page
         navigate('/Field');
       } else {
         // Handle sign-in error
         console.error('Sign-in failed');
+        openSnackbar("error", "Sign-in failed!");
       }
     } catch (error) {
-      // Alert('Invalid credentials!');
       console.error('An error occurred', error);
+      if (error.response.data.error) {
+        openSnackbar("error", error.response.data.error);
+      } else {
+        openSnackbar("error", "An error occurred!");
+      }
     } finally {
       setOpenLoading(false);
     }
+  }, [email, password]);
 
-  };
+  const handleEmailChange = useCallback((e) => {
+    setEmail(e.target.value);
+    if (e.target.value) {
+      setTouched({ ...touched, email: false });
+      setErrors({ ...errors, email: '' });
+    } else {
+      setTouched({ ...touched, email: true });
+      setErrors({ ...errors, email: 'Email is required' });
+    }
+  }, [errors, touched]);
+
+  const handlePasswordChange = useCallback((e) => {
+    setPassword(e.target.value);
+    if (e.target.value) {
+      setTouched({ ...touched, password: false });
+      setErrors({ ...errors, password: '' });
+    } else {
+      setTouched({ ...touched, password: true });
+      setErrors({ ...errors, password: 'Password is required' });
+    }
+  }, [errors, touched]);
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -90,18 +120,22 @@ const AuthLogin = () => {
     event.preventDefault();
   };
 
+  const formikInitialValues = useMemo(() => ({
+    email: '',
+    password: '',
+    submit: null
+  }), []);
+
+  const formikValidationSchema = useMemo(() => Yup.object().shape({
+    email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
+    password: Yup.string().max(255).required('Password is required')
+  }), [])
+
   return (
     <>
       <Formik
-        initialValues={{
-          email: '',
-          password: '',
-          submit: null
-        }}
-        validationSchema={Yup.object().shape({
-          email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-          password: Yup.string().max(255).required('Password is required')
-        })}
+        initialValues={formikInitialValues}
+        validationSchema={formikValidationSchema}
         onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
           try {
             setStatus({ success: false });
@@ -122,17 +156,7 @@ const AuthLogin = () => {
                 type="email"
                 name="email"
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (e.target.value) {
-                    setTouched({ ...touched, email: false });
-                    setErrors({ ...errors, email: '' });
-                  } else {
-                    setTouched({ ...touched, email: true });
-                    setErrors({ ...errors, email: 'Email is required' });
-                  }
-                }
-                }
+                onChange={handleEmailChange}
                 placeholder="Enter email address"
                 fullWidth
                 error={Boolean(touched.email && errors.email)}
@@ -154,16 +178,7 @@ const AuthLogin = () => {
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value)
-                  if (e.target.value) {
-                    setTouched({ ...touched, password: false });
-                    setErrors({ ...errors, password: '' });
-                  } else {
-                    setTouched({ ...touched, password: true });
-                    setErrors({ ...errors, password: 'Password is required' });
-                  }
-                }}
+                onChange={handlePasswordChange}
                 endAdornment={
                   <InputAdornment position="end">
                     <IconButton
@@ -206,6 +221,9 @@ const AuthLogin = () => {
               </Link>
             </Stack>
           </Grid>
+          {/* <Grid item xs={12}>
+            <FirebaseSocial />
+          </Grid> */}
           {errors.submit && (
             <Grid item xs={12}>
               <FormHelperText error>{errors.submit}</FormHelperText>
@@ -216,7 +234,6 @@ const AuthLogin = () => {
               <Button
                 disableElevation
                 onClick={handleSignIn}
-                // disabled={isSubmitting}
                 fullWidth
                 size="large"
                 type="submit"
@@ -229,9 +246,23 @@ const AuthLogin = () => {
           </Grid>
         </Grid>
       </Formik>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={closeSnackbar}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        key={snackbar.type}
+      >
+        <Alert onClose={closeSnackbar} severity={snackbar.type} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
       <LoadingScreen openLoading={openLoading} />
     </>
   );
 };
 
-export default AuthLogin;
+export default React.memo(AuthLogin);

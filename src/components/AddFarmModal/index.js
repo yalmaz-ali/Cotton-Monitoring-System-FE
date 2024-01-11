@@ -7,112 +7,40 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import axios from "axios";
-import Cookies from "js-cookie";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 
+const Alert = React.forwardRef(function Alert(props, ref) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
+
 function AddFarmModal({ open, onClose, farmAdded }) {
     const [farmName, setFarmName] = useState("");
+    const [snackbar, setSnackbar] = useState({ open: false, type: "", message: "" });
 
-    const [successSB, setSuccessSB] = useState(false);
-    const [errorSB, setErrorSB] = useState(false);
-    const [warningSB, setWarningSB] = useState(false);
-
-    const openSuccessSB = () => setSuccessSB(true);
-    const closeSuccessSB = () => setSuccessSB(false);
-    const openErrorSB = () => setErrorSB(true);
-    const closeErrorSB = () => setErrorSB(false);
-    const openWarningSB = () => setWarningSB(true);
-    const closeWarningSB = () => setWarningSB(false);
-
-    const Alert = React.forwardRef(function Alert(props, ref) {
-        return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-    });
-
-    const renderSuccessSB = (
-        <Snackbar
-            open={successSB}
-            autoHideDuration={4000}
-            onClose={closeSuccessSB}
-            anchorOrigin={{
-                vertical: "top",
-                horizontal: "right",
-            }}
-            key={'success'}
-            close={closeSuccessSB}
-        >
-            <Alert onClose={closeSuccessSB} severity="success" sx={{ width: '100%' }}>
-                Farm Added!
-            </Alert>
-        </Snackbar>
-    );
-
-    const renderErrorSB = (
-        <Snackbar
-            open={errorSB}
-            autoHideDuration={4000}
-            onClose={closeErrorSB}
-            anchorOrigin={{
-                vertical: "top",
-                horizontal: "right",
-            }}
-            key={'error'}
-            close={closeErrorSB}
-        >
-            <Alert onClose={closeErrorSB} severity="error" sx={{ width: '100%' }}>
-                Your Farm is not added please try again!
-            </Alert>
-        </Snackbar>
-    );
-
-    const renderWarningSB = (
-        <Snackbar
-            open={warningSB}
-            autoHideDuration={4000}
-            onClose={closeWarningSB}
-            anchorOrigin={{
-                vertical: "top",
-                horizontal: "right",
-            }}
-            key={'warning'}
-            close={closeWarningSB}
-        >
-            <Alert onClose={closeWarningSB} severity="warning" sx={{ width: '100%' }}>
-                Please Enter Farm Name!
-            </Alert>
-        </Snackbar>
-    );
-
-
+    const openSnackbar = (type, message) => setSnackbar({ open: true, type, message });
+    const closeSnackbar = () => setSnackbar({ open: false, type: "", message: "" });
 
     const handleFarmNameChange = (event) => {
         setFarmName(event.target.value);
     };
 
     const handleAddFarm = async () => {
-        const jwtcookie = Cookies.get("jwt");
-        console.log("jwtcookie", jwtcookie);
-
-        const jwtToken = localStorage.getItem("jwtToken");
-        console.log("jwtToken", jwtToken);
-
         if (farmName !== "") {
             try {
                 const response = await axios.post("http://localhost:8000/api/farm/", { name: farmName }, { withCredentials: true });
-                openSuccessSB();
-                console.log(response.data);
+                openSnackbar("success", "Farm Added!");
                 onClose(); // Close the modal
                 setFarmName(""); // Clear the input field
                 farmAdded(true);
             } catch (error) {
                 // Handle error
-                openErrorSB();
+                openSnackbar("error", "Your Farm is not added please try again!");
                 onClose();
                 farmAdded(false);
-                console.error("Error adding farm:", error);
             }
         } else {
-            openWarningSB();
+            openSnackbar("warning", "Please Enter Farm Name!");
             onClose();
         }
     };
@@ -149,9 +77,20 @@ function AddFarmModal({ open, onClose, farmAdded }) {
                     </Button>
                 </DialogActions>
             </Dialog>
-            {renderSuccessSB}
-            {renderErrorSB}
-            {renderWarningSB}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={closeSnackbar}
+                anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                }}
+                key={snackbar.type}
+            >
+                <Alert onClose={closeSnackbar} severity={snackbar.type} sx={{ width: '100%' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </>
     );
 }

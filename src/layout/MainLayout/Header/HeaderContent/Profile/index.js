@@ -31,7 +31,7 @@ import ProfileTab from './ProfileTab';
 import SettingTab from './SettingTab';
 
 // assets
-import avatar1 from 'assets/images/users/avatar-3.png';
+// import avatar1 from 'assets/images/users/avatar-3.png';
 import { useAuth } from "context/auth-context/AuthContext";
 import axios from "axios";
 import { drawerWidth } from 'config';

@@ -108,6 +108,7 @@ function PalleteBar(props) {
                 cursor: "default",
                 textAlign: "center",
                 minWidth: "320px",
+                maxWidth: "500px",
                 bottom: "30px",
                 left: "-65px",
                 position: "absolute",
@@ -120,92 +121,137 @@ function PalleteBar(props) {
                 <div
                     style={{
                         display: "flex",
-                        flexDirection: "column",
-                        width: "100%",
-                        height: "100%",
-                        padding: "5px"
+                        flexDirection: "row"
                     }}
                 >
                     <div
                         style={{
-                            fontSize: "10px",
-                            fontFamily: "Roboto,Arial,sans-serif",
                             display: "flex",
-                            justifyContent: "space-between",
-                            marginBottom: "5px"
+                            flexDirection: "column",
+                            width: "80%",
+                            height: "100%",
+                            padding: "5px"
                         }}
                     >
-                        {filling === 'Average NDVI' &&
-                            <>
-                                <div style={{ fontSize: "12px" }}>0</div>
-                                <div style={{ fontSize: "12px" }}>0.5</div>
-                                <div style={{ fontSize: "12px" }}>1</div>
-                            </>
-                        }
-                        {(filling === 'NDVI' || filling === 'Contrasted NDVI') &&
-                            <>
-                                <div style={{ fontSize: "12px" }}>Low vegetation index</div>
-                                <div style={{ fontSize: "12px" }}>High</div>
-                            </>
-                        }
+                        <div
+                            style={{
+                                fontSize: "10px",
+                                fontFamily: "Graphik, Roboto, sans-serif",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                marginBottom: "5px"
+                            }}
+                        >
+                            {filling === 'Average NDVI' &&
+                                <>
+                                    <div style={{ fontSize: "12px" }}>0</div>
+                                    <div style={{ fontSize: "12px" }}>0.5</div>
+                                    <div style={{ fontSize: "12px" }}>1</div>
+                                </>
+                            }
+                            {(filling === 'NDVI' || filling === 'Contrasted NDVI') &&
+                                <>
+                                    <div style={{ fontSize: "12px" }}>Low vegetation index</div>
+                                    <div style={{ fontSize: "12px" }}>High</div>
+                                </>
+                            }
+                        </div>
+
+                        <ul style={{
+                            display: "flex",
+                            height: "4px",
+                            margin: "0",
+                            padding: "0",
+                            listStyleType: "none"
+                        }}>
+                            {filling === 'Average NDVI' &&
+                                <>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#422112" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#7f4020" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#b76135" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#c6974e" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#e6c957" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#fdfe03" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#e6ec06" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#d0df00" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#b9cf02" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#a2c000" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#8aaf00" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#72a000" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#5b8e03" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#458100" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#2d7000" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#25602d" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#15542d" }}></li>
+                                    <li style={{ width: "calc(100% / 18)", backgroundColor: "#15442d" }}></li>
+                                </>
+                            }
+                            {filling === 'NDVI' &&
+                                <>
+                                    <li
+                                        className="sx4jg6a"
+                                        style={{
+                                            background: "linear-gradient(90deg, #350801 0%, #7e1805 5.555555555555555%, #af3a03 11.11111111111111%, #ecb225 16.666666666666664%, #fcd731 22.22222222222222%, #fee85f 27.77777777777778%, #fefe00 33.33333333333333%, #f2f900 38.88888888888889%, #c4e700 44.44444444444444%, #97d500 50%, #5fc100 55.55555555555556%, #379f00 61.111111111111114%, #1c8300 66.66666666666666%, #0b6400 72.22222222222221%, #064b0a 77.77777777777779%, #033a0f 83.33333333333334%, #02310c 88.88888888888889%, #02310c 94.44444444444444%)",
+                                            width: "100%"
+
+                                        }}
+                                    >
+                                    </li>
+                                </>
+                            }
+                            {filling === 'Contrasted NDVI' &&
+                                <>
+                                    <li
+                                        className="sx4jg6a"
+                                        style={{
+                                            background: "linear-gradient(90deg, #960850 0%, #bf052a 5.555555555555555%, #e90205 11.11111111111111%, #f5320c 16.666666666666664%, #fd6919 22.22222222222222%, #ff9026 27.77777777777778%, #ffb133 33.33333333333333%, #ffd028 38.88888888888889%, #feef0f 44.44444444444444%, #effc02 50%, #d0f501 55.55555555555556%, #a7ee02 61.111111111111114%, #6be709 66.66666666666666%, #38dc17 72.22222222222221%, #1ec73d 77.77777777777779%, #07b25f 83.33333333333334%, #099d6b 88.88888888888889%, #0b8877 94.44444444444444%)",
+                                            width: "100%"
+
+                                        }}
+                                    >
+                                    </li>
+                                </>
+                            }
+                        </ul>
                     </div>
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            width: "20%",
+                            height: "100%",
+                            padding: "5px"
+                        }}
+                    >
+                        <div
+                            style={{
+                                fontFamily: "Graphik, Roboto, sans-serif",
+                                display: "flex",
+                                justifyContent: "center",
+                                marginBottom: "5px"
+                            }}
+                        >
+                            {(filling === 'NDVI' || filling === 'Contrasted NDVI' || filling === 'Average NDVI') &&
+                                <>
+                                    <div style={{ fontSize: "12px" }}>Cloud</div>
+                                </>
+                            }
+                        </div>
 
-                    <ul style={{
-                        display: "flex",
-                        height: "4px",
-                        margin: "0",
-                        padding: "0",
-                        listStyleType: "none"
-                    }}>
-                        {filling === 'Average NDVI' &&
-                            <>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#422112" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#7f4020" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#b76135" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#c6974e" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#e6c957" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#fdfe03" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#e6ec06" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#d0df00" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#b9cf02" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#a2c000" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#8aaf00" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#72a000" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#5b8e03" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#458100" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#2d7000" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#25602d" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#15542d" }}></li>
-                                <li style={{ width: "calc(100% / 18)", backgroundColor: "#15442d" }}></li>
-                            </>
-                        }
-                        {filling === 'NDVI' &&
-                            <>
-                                <li
-                                    className="sx4jg6a"
-                                    style={{
-                                        background: "linear-gradient(90deg, #350801 0%, #7e1805 5.555555555555555%, #af3a03 11.11111111111111%, #ecb225 16.666666666666664%, #fcd731 22.22222222222222%, #fee85f 27.77777777777778%, #fefe00 33.33333333333333%, #f2f900 38.88888888888889%, #c4e700 44.44444444444444%, #97d500 50%, #5fc100 55.55555555555556%, #379f00 61.111111111111114%, #1c8300 66.66666666666666%, #0b6400 72.22222222222221%, #064b0a 77.77777777777779%, #033a0f 83.33333333333334%, #02310c 88.88888888888889%, #02310c 94.44444444444444%)",
-                                        width: "100%"
-
-                                    }}
-                                >
-                                </li>
-                            </>
-                        }
-                        {filling === 'Contrasted NDVI' &&
-                            <>
-                                <li
-                                    className="sx4jg6a"
-                                    style={{
-                                        background: "linear-gradient(90deg, #960850 0%, #bf052a 5.555555555555555%, #e90205 11.11111111111111%, #f5320c 16.666666666666664%, #fd6919 22.22222222222222%, #ff9026 27.77777777777778%, #ffb133 33.33333333333333%, #ffd028 38.88888888888889%, #feef0f 44.44444444444444%, #effc02 50%, #d0f501 55.55555555555556%, #a7ee02 61.111111111111114%, #6be709 66.66666666666666%, #38dc17 72.22222222222221%, #1ec73d 77.77777777777779%, #07b25f 83.33333333333334%, #099d6b 88.88888888888889%, #0b8877 94.44444444444444%)",
-                                        width: "100%"
-
-                                    }}
-                                >
-                                </li>
-                            </>
-                        }
-                    </ul>
+                        <ul style={{
+                            display: "flex",
+                            height: "4px",
+                            margin: "0",
+                            padding: "0",
+                            listStyleType: "none"
+                        }}>
+                            {(filling === 'Average NDVI' || filling === 'NDVI' || filling === 'Contrasted NDVI') &&
+                                <>
+                                    <li style={{ width: "100%", backgroundColor: "white" }}></li>
+                                </>
+                            }
+                        </ul>
+                    </div>
                 </div>
                 :
                 <div style={{
@@ -215,7 +261,8 @@ function PalleteBar(props) {
                     justifyContent: 'flex-start',
                     width: '100%',
                     height: '100%',
-                    fontSize: '10px',
+                    fontSize: '11px',
+                    overflowX: 'hidden',
                 }}>
                     {Array.from(new Set(props.polygons.map(polygon => polygon.fillColor))).map((color, index) => (
                         <div key={index}
@@ -224,7 +271,8 @@ function PalleteBar(props) {
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 marginRight: '10px',
-                                marginLeft: '5px'
+                                marginLeft: '5px',
+                                fontFamily: "Graphik, Roboto, sans-serif",
                             }}
                         >
                             <div

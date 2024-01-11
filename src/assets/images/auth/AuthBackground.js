@@ -1,27 +1,21 @@
-// material-ui
-import { useTheme } from '@mui/material/styles';
-import { Box } from '@mui/material';
-import background from 'assets/images/auth/back_auth.jpg';
-
-// ==============================|| AUTH BLUR BACK SVG ||============================== //
 
 const AuthBackground = () => {
+  const background = 'https://th.bing.com/th/id/OIP.hCvXOC0lqFz7PqIkqmAXfQHaES?w=560&h=324&rs=1&pid=ImgDetMain';
+
   return (
-    // <Box sx={{
-    //   position: 'absolute', filter: 'blur(5px)', zIndex: -1, bottom: 0,
-    //   // width: '100%', height: '100%'
-    // }}>
-    <>
-      <img src={background} alt="Background"
-        style={{
-          position: 'absolute',
-          filter: 'blur(5px)',
-          zIndex: -1,
-          bottom: 0,
-          width: '100%',
-          height: '100%'
-        }} />
-    </>
+    <img
+      src={background}
+      alt="Background"
+      style={{
+        position: 'absolute',
+        filter: 'blur(5px)',
+        zIndex: -1,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        objectFit: 'cover'
+      }}
+    />
   );
 };
 

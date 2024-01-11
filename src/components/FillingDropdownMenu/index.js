@@ -2,10 +2,11 @@ import React, { useState, useEffect } from "react";
 import MenuItem from "@mui/material/MenuItem";
 import { Box, FormControl, FormHelperText, Select } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useParams } from 'react-router-dom';
 
 function FillingDropdownMenu({ onFillingSelect }) {
-
-    const [filling, setFilling] = useState('No Filling');
+    const { fieldId } = useParams();
+    const [filling, setFilling] = useState("");
 
     const handleChange = (event) => {
         const selected = event.target.value;
@@ -13,7 +14,14 @@ function FillingDropdownMenu({ onFillingSelect }) {
     };
 
     useEffect(() => {
-        onFillingSelect(filling); // Notify parent component
+        console.log("1");
+        setFilling(fieldId ? "NDVI" : "No Filling");
+    }, [fieldId]);
+
+    useEffect(() => {
+        console.log("2");
+        fieldId ? onFillingSelect(filling, true) :
+            onFillingSelect(filling, false); // Notify parent component
     }, [filling]);
 
     return (
@@ -30,11 +38,18 @@ function FillingDropdownMenu({ onFillingSelect }) {
                         return <ExpandMoreIcon fontSize="medium" />;
                     }}
                 >
-                    <MenuItem value={"No Filling"}>No Filling</MenuItem>
-                    <MenuItem value={"Average NDVI"}>Average NDVI</MenuItem>
-                    <MenuItem value={"NDVI"}>NDVI</MenuItem>
-                    <MenuItem value={"Contrasted NDVI"}>Contrasted NDVI</MenuItem>
-                    <MenuItem value={"Crop"}>Crop</MenuItem>
+                    {
+                        fieldId ? [
+                            <MenuItem value={"NDVI"} key="3">NDVI</MenuItem>,
+                            <MenuItem value={"Contrasted NDVI"} key="4">Contrasted NDVI</MenuItem>
+                        ] : [
+                            <MenuItem value={"No Filling"} key="1">No Filling</MenuItem>,
+                            <MenuItem value={"Average NDVI"} key="2">Average NDVI</MenuItem>,
+                            <MenuItem value={"NDVI"} key="3">NDVI</MenuItem>,
+                            <MenuItem value={"Contrasted NDVI"} key="4">Contrasted NDVI</MenuItem>,
+                            <MenuItem value={"Crop"} key="5">Crop</MenuItem>
+                        ]
+                    }
                 </Select>
             </FormControl>
         </Box>

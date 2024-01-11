@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -12,9 +12,12 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import axios from "axios";
-import Cookies from "js-cookie";
-// import MDSnackbar from "components/MDSnackbar";
-import PropTypes from "prop-types";
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+
+const Alert = React.forwardRef(function Alert(props, ref) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 function AddSeasonModal({ open, onClose, selectedFarm, seasonAdded }) {
     const [SeasonName, setSeasonName] = useState("");
@@ -22,20 +25,13 @@ function AddSeasonModal({ open, onClose, selectedFarm, seasonAdded }) {
     const [EndDate, setEndDate] = useState(null);
     const [CopyFields, setCopyFields] = useState(false);
 
-    const [successSB, setSuccessSB] = useState(false);
-    const [errorSB, setErrorSB] = useState(false);
-    const [warningSB, setWarningSB] = useState(false);
+    const [snackbar, setSnackbar] = useState({ open: false, type: "", message: "" });
 
-    const openSuccessSB = () => setSuccessSB(true);
-    const closeSuccessSB = () => setSuccessSB(false);
-    const openErrorSB = () => setErrorSB(true);
-    const closeErrorSB = () => setErrorSB(false);
-    const openWarningSB = () => setWarningSB(true);
-    const closeWarningSB = () => setWarningSB(false);
+    const openSnackbar = (type, message) => setSnackbar({ open: true, type, message });
+    const closeSnackbar = () => setSnackbar({ open: false, type: "", message: "" });
 
     useEffect(() => {
         if (!open) {
-            // console.log(selectedFarmId);
             // Reset the field values only when the dialog is opened
             setSeasonName("");
             setStartDate(null);
@@ -45,54 +41,11 @@ function AddSeasonModal({ open, onClose, selectedFarm, seasonAdded }) {
     }, [open]);
 
 
-    // const renderSuccessSB = (
-    //     <MDSnackbar
-    //         color="success"
-    //         icon="check"
-    //         title="Season Added"
-    //         content="Your Season is added!"
-    //         // dateTime="11 mins ago"
-    //         open={successSB}
-    //         onClose={closeSuccessSB}
-    //         close={closeSuccessSB}
-    //         bgWhite
-    //     />
-    // );
-
-    // const renderErrorSB = (
-    //     <MDSnackbar
-    //         color="error"
-    //         icon="warning"
-    //         title="Error"
-    //         content="Your Season is not added please try again!"
-    //         // dateTime="11 mins ago"
-    //         open={errorSB}
-    //         onClose={closeErrorSB}
-    //         close={closeErrorSB}
-    //         bgWhite
-    //     />
-    // );
-
-    // const renderWarningSB = (
-    //     <MDSnackbar
-    //         color="warning"
-    //         icon="star"
-    //         title="Warning"
-    //         content="Please Enter Season Name!"
-    //         // dateTime="11 mins ago"
-    //         open={warningSB}
-    //         onClose={closeWarningSB}
-    //         close={closeWarningSB}
-    //         bgWhite
-    //     />
-    // );
-
-
-    const handleSeasonNameChange = (event) => {
+    const handleSeasonNameChange = useCallback((event) => {
         setSeasonName(event.target.value);
-    };
+    }, []);
 
-    const handleAddSeason = () => {
+    const handleAddSeason = useCallback(() => {
         let copy_fields = "False";
 
         if (CopyFields) {
@@ -111,24 +64,24 @@ function AddSeasonModal({ open, onClose, selectedFarm, seasonAdded }) {
 
             axios.post("http://localhost:8000/api/season/", data, { withCredentials: true })
                 .then((response) => {
-                    openSuccessSB();
+                    openSnackbar("success", "Season Added!");
                     console.log(response.data);
                     seasonAdded(true);
                     onClose(); // Close the modal
                 })
                 .catch((error) => {
                     // Handle error
-                    openErrorSB();
+                    openSnackbar("error", "Error adding Season!");
                     onClose();
                     seasonAdded(false);
                     console.error("Error adding Season:", error);
                 });
         }
         else {
-            openWarningSB();
+            openSnackbar("warning", "Please Enter Season Name!");
             onClose();
         }
-    };
+    }, [SeasonName, selectedFarm, StartDate, EndDate, CopyFields]);
 
     return (
         <>
@@ -180,15 +133,22 @@ function AddSeasonModal({ open, onClose, selectedFarm, seasonAdded }) {
                     </Button>
                 </DialogActions>
             </Dialog>
-            {/* {renderSuccessSB}
-            {renderErrorSB}
-            {renderWarningSB} */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={closeSnackbar}
+                anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                }}
+                key={snackbar.type}
+            >
+                <Alert onClose={closeSnackbar} severity={snackbar.type} sx={{ width: '100%' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </>
     );
 }
 
-// AddSeasonModal.propTypes = {
-//     selectedFarmId: PropTypes.number
-// };
-
-export default AddSeasonModal;
+export default React.memo(AddSeasonModal);
