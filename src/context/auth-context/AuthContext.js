@@ -10,21 +10,19 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
     const [authenticated, setAuthenticated] = useState(false);
 
-    const login = (jwtToken) => {
+    const login = (jwtToken, expiration) => {
         // Implement your login logic here
         setAuthenticated(true);
 
-        // Store JWT token in local storage
-        localStorage.setItem('jwtToken', jwtToken);
-
-        // Store JWT token in cookies
-        Cookies.set('jwt', jwtToken, { expires: 5 }); // Adjust expiration as needed
+        Cookies.set('jwt', jwtToken,
+            {
+                expires: expiration
+            });
     };
 
     const logout = () => {
         // Implement your logout logic here
         setAuthenticated(false);
-        localStorage.removeItem('jwtToken'); // Clear JWT token from local storage
         Cookies.remove('jwt'); // Clear JWT token cookie
     };
 

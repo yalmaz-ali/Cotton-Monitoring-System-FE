@@ -2,7 +2,7 @@
 
 const config = {
   defaultPath: '/Field',
-  fontFamily: `'Public Sans', sans-serif`,
+  fontFamily: `'Graphik','Public Sans', sans-serif`,
   i18n: 'en',
   miniDrawer: false,
   container: true,

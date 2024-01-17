@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import MenuItem from "@mui/material/MenuItem";
 import axios from "axios";
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Modal, Select, TextField, Tooltip, Box } from "@mui/material";
@@ -8,6 +9,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from "@mui/icons-material/Add"; // Import the Add Icon
 
 import AddFarmModal from "components/AddFarmModal";
+import { useAuth } from './../../context/auth-context/AuthContext';
+import Cookies from "js-cookie";
 
 const styles = {
     formControl: {
@@ -33,9 +36,9 @@ const styles = {
         cursor: "pointer",
         display: "flex",
         justifyContent: "space-between",
-        color: "#3f51b5",
+        color: "#53b84d",
         fontWeight: "bold",
-        backgroundColor: "#e8eaf6",
+        backgroundColor: "#aad8a7",
     },
 };
 
@@ -48,6 +51,38 @@ function FarmDropdownMenu({ onFarmSelect }) {
     const [selectedFarmId, setSelectedFarmId] = useState(null);
 
     const [isAddFarmModalOpen, setAddFarmModalOpen] = useState(false);
+
+    const { authenticated, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const [dropdownClicked, setDropdownClicked] = useState(false);
+
+    useEffect(() => {
+        const jwtToken = Cookies.get('jwt');
+        if (!jwtToken) {
+            console.log("no jwt token");
+            logout();
+            return;
+        }
+        getUser();
+    }, [authenticated, dropdownClicked]);
+
+    const getUser = async () => {
+        try {
+            const response = await axios.get('http://localhost:8000/auth/user/', {
+                withCredentials: true,
+            });
+            const user = response.data;
+            if (user) {
+                console.log("user", user);
+            } else {
+                logout();
+            }
+        } catch (error) {
+            logout();
+        }
+    };
+
 
 
     useEffect(() => {
@@ -83,7 +118,11 @@ function FarmDropdownMenu({ onFarmSelect }) {
     const handleDeleteFarm = (farmId) => {
         // Send a request to delete the farm with the specified ID
         axios
-            .delete(`http://localhost:8000/api/farm/${farmId}/`, { withCredentials: true })
+            .delete(`http://localhost:8000/api/farm/${farmId}/`, {
+                headers: {
+                    'X-CSRFToken': Cookies.get('csrftoken')
+                }, withCredentials: true
+            })
             .then(() => {
                 axios
                     .get("http://localhost:8000/api/farm/", { withCredentials: true })
@@ -110,6 +149,7 @@ function FarmDropdownMenu({ onFarmSelect }) {
     };
 
     const handleMenuClick = () => {
+        setDropdownClicked(prevState => !prevState); // Toggle dropdownClicked
         axios
             .get("http://localhost:8000/api/farm/", { withCredentials: true })
             .then((response) => {
@@ -141,7 +181,11 @@ function FarmDropdownMenu({ onFarmSelect }) {
                 .patch(
                     `http://localhost:8000/api/farm/${selectedFarmId}/`,
                     { name: editedFarmName },
-                    { withCredentials: true }
+                    {
+                        headers: {
+                            'X-CSRFToken': Cookies.get('csrftoken')
+                        }, withCredentials: true
+                    }
                 )
                 .then(() => {
                     // Reload the farm names

@@ -19,10 +19,6 @@ function KmlUploadForm(props) {
         setPolygons(props.polygons);
     }, [props.polygons]);
 
-    useEffect(() => {
-        console.log(selectedPolygons);
-    }, [selectedPolygons]);
-
     const handleSelectAll = (event) => {
         if (event.target.checked) {
             setSelectedPolygons(polygons.map(polygon => polygon.id));
@@ -39,10 +35,9 @@ function KmlUploadForm(props) {
         }
     };
 
-    const handleSaveKmlPolygons = () => {
+    const handleSaveKmlButton = () => {
         const selected = polygons.filter(polygon => selectedPolygons.includes(polygon.id));
-        // props.handleSaveKmlPolygons(selected);
-        console.log("selected", selected);
+        props.handleUploadKmlPolygons(selected);
     };
 
     return (
@@ -83,7 +78,13 @@ function KmlUploadForm(props) {
                             style={{
                                 marginLeft: "6px"
                             }}
-                            control={<Checkbox onChange={handleSelectAll} />}
+                            control={
+                                <Checkbox
+                                    onChange={handleSelectAll}
+                                    style={{
+                                        color: "#53b84d"
+                                    }}
+                                />}
                         />
                         <Typography
                             variant="body1"
@@ -111,6 +112,9 @@ function KmlUploadForm(props) {
                                     control={
                                         <Checkbox
                                             checked={selectedPolygons.includes(polygon.id)}
+                                            style={{
+                                                color: "#53b84d"
+                                            }}
                                             onChange={handleSelect(polygon.id)}
                                         />
                                     }
@@ -148,8 +152,7 @@ function KmlUploadForm(props) {
                 </Button>
                 <Button
                     variant="contained"
-                    color="primary"
-                    onClick={handleSaveKmlPolygons}
+                    onClick={handleSaveKmlButton}
                 >
                     Upload KML
                 </Button>

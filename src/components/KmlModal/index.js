@@ -126,7 +126,7 @@ const KmlModal = (props) => {
                                 <Typography
                                     variant="h5"
                                 >
-                                    Drag and drop file here
+                                    Select file here
                                 </Typography>
                                 <Typography variant="body2">
                                     10 MB Max

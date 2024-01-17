@@ -15,7 +15,8 @@ import MainForm from "./MainForm";
 import EditJob from "./EditJob";
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
-import LoadingScreen from "components/LoadingScreen";
+import LoadingScreen from "components/LoadingScreen/index";
+import Cookies from "js-cookie";
 
 const RenderJobs = ({ farm, season }) => {
 
@@ -106,7 +107,11 @@ const RenderJobs = ({ farm, season }) => {
 
         try {
             await axios
-                .delete(`http://localhost:8000/api/job/deletejob/${Jobid}/`, { withCredentials: true })
+                .delete(`http://localhost:8000/api/job/deletejob/${Jobid}/`, {
+                    headers: {
+                        'X-CSRFToken': Cookies.get('csrftoken')
+                    }, withCredentials: true
+                })
                 .then((response) => {
                     console.log(response.data);
                     fetchJobs();
@@ -216,9 +221,17 @@ const RenderJobs = ({ farm, season }) => {
         try {
 
             if (isEditing) {
-                response = await axios.patch(`http://localhost:8000/api/job/patchjob/${jobIdToEdit}/`, data, { withCredentials: true });
+                response = await axios.patch(`http://localhost:8000/api/job/patchjob/${jobIdToEdit}/`, data, {
+                    headers: {
+                        'X-CSRFToken': Cookies.get('csrftoken')
+                    }, withCredentials: true
+                });
             } else {
-                response = await axios.post("http://localhost:8000/api/job/", data, { withCredentials: true });
+                response = await axios.post("http://localhost:8000/api/job/", data, {
+                    headers: {
+                        'X-CSRFToken': Cookies.get('csrftoken')
+                    }, withCredentials: true
+                });
             }
 
             console.log(response);

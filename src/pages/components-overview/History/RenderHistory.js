@@ -16,10 +16,10 @@ import {
     useMediaQuery
 } from '@mui/material';
 import axios from 'axios';
-import LoadingScreen from 'components/LoadingScreen';
+import LoadingScreen from 'components/LoadingScreen/index';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import AddCropModal from 'components/AddCropModal';
-
+import Cookies from 'js-cookie';
 
 function RenderHistory({ selectedFarmId }) {
     const [openLoading, setOpenLoading] = useState(false);
@@ -80,7 +80,11 @@ function RenderHistory({ selectedFarmId }) {
         }
         console.log("data", data);
         try {
-            const response = await axios.patch(`http://localhost:8000/api/field/patchField/${selectedFieldId}/${selectedSeasonId}/`, data, { withCredentials: true });
+            const response = await axios.patch(`http://localhost:8000/api/field/patchField/${selectedFieldId}/${selectedSeasonId}/`, data, {
+                headers: {
+                    'X-CSRFToken': Cookies.get('csrftoken')
+                }, withCredentials: true
+            });
             console.log("responsee", response.data);
             fetchData();
         } catch (error) {
@@ -154,7 +158,11 @@ function RenderHistory({ selectedFarmId }) {
                     />
                     {data.map((field) => (
                         <Card key={field.fieldId} style={{ margin: '16px 0', height: '61.97px' }}>
-                            <CardContent style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <CardContent
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between'
+                                }}>
                                 <Typography
                                     variant="subtitle1"
                                     style={{
@@ -166,7 +174,7 @@ function RenderHistory({ selectedFarmId }) {
                                 >
                                     {field.fieldName}
                                 </Typography>
-                                <Typography>ID: {field.fieldId}</Typography>
+                                {/* <Typography>ID: {field.fieldId}</Typography> */}
                             </CardContent>
                         </Card>
                     ))}
@@ -240,20 +248,23 @@ function RenderHistory({ selectedFarmId }) {
                                                                             position: 'absolute',
                                                                             top: -5,
                                                                             right: -5,
-                                                                            color: 'red',
+                                                                            color: '#53b84d',
                                                                             borderBottomLeftRadius: 20,
                                                                         }}
                                                                         onClick={() => handleDelete(field.fieldId, crop.season.id)}
                                                                     >
                                                                         <RemoveCircleOutlineIcon
-                                                                            fontSize="small"
-                                                                            color="error"
-                                                                        />
+                                                                            fontSize="small" />
                                                                     </IconButton>
                                                                 </>
                                                                 :
                                                                 <>
-                                                                    <Button onClick={(event) => handleClick(event, field.fieldId, crop.season.id)}>
+                                                                    <Button
+                                                                        style={{
+                                                                            color: '#53b84d',
+                                                                            fontWeight: 'bold',
+                                                                        }}
+                                                                        onClick={(event) => handleClick(event, field.fieldId, crop.season.id)}>
                                                                         Assign Crop
                                                                     </Button>
                                                                     <AddCropModal

@@ -9,6 +9,7 @@ import TextField from "@mui/material/TextField";
 import axios from "axios";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
+import Cookies from 'js-cookie';
 
 const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -28,7 +29,11 @@ function AddFarmModal({ open, onClose, farmAdded }) {
     const handleAddFarm = async () => {
         if (farmName !== "") {
             try {
-                const response = await axios.post("http://localhost:8000/api/farm/", { name: farmName }, { withCredentials: true });
+                const response = await axios.post("http://localhost:8000/api/farm/", { name: farmName }, {
+                    headers: {
+                        'X-CSRFToken': Cookies.get('csrftoken')
+                    }, withCredentials: true
+                });
                 openSnackbar("success", "Farm Added!");
                 onClose(); // Close the modal
                 setFarmName(""); // Clear the input field

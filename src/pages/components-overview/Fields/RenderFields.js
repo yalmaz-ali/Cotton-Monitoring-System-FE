@@ -5,6 +5,7 @@ import FieldDrawForm from "./FieldDrawForm";
 import { useMediaQuery } from '@mui/material';
 import KmlModal from "components/KmlModal/index";
 import KmlUploadForm from "./KmlUploadForm";
+import LoadingScreen from "components/LoadingScreen/index";
 
 const RenderFields = ({
     fieldData,
@@ -18,7 +19,8 @@ const RenderFields = ({
     deleteSelectedShape,
     addSelectedShape,
     onSubmit,
-    mainMap
+    mainMap,
+    addkmlShape
 }) => {
     // console.log("fieldData in RenderBar", fieldData);
 
@@ -38,6 +40,8 @@ const RenderFields = ({
     const [file, setFile] = useState(null);
     const [polygons, setPolygons] = useState([]);
     const [isKmlUploaded, setIsKmlUploaded] = useState(false);
+
+    const [openLoading, setOpenLoading] = useState(false);
 
     const handleAddFieldPopper = (event) => {
         event.stopPropagation();
@@ -150,6 +154,20 @@ const RenderFields = ({
     };
 
     const handleCancelKml = () => {
+        setIsKmlUploaded(false);
+        setIsMain(true);
+        setPolygons([]);
+        mappedPolygons.forEach(polygon => polygon.setMap(null));
+        setMappedPolygons([]);
+    };
+
+    const handleUploadKmlPolygons = async (selected) => {
+        setOpenLoading(true);
+        console.log("selected", selected);
+        for (const polygon of selected) {
+            await addkmlShape(polygon);
+        }
+        setOpenLoading(false);
         setIsKmlUploaded(false);
         setIsMain(true);
         setPolygons([]);
@@ -318,6 +336,7 @@ const RenderFields = ({
                 <KmlUploadForm
                     polygons={polygons}
                     handleCancelKml={handleCancelKml}
+                    handleUploadKmlPolygons={handleUploadKmlPolygons}
                 />
             }
             <KmlModal
@@ -328,6 +347,8 @@ const RenderFields = ({
                 setFile={setFile}
                 handleFileUpload={handleFileUpload}
             />
+            <LoadingScreen openLoading={openLoading} />
+
         </div >
     );
 };

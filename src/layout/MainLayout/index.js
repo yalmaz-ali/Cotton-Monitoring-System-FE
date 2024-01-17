@@ -15,6 +15,7 @@ import Header from './Header';
 
 // types
 import { openDrawer } from 'store/reducers/menu';
+import { useAuth } from './../../context/auth-context/AuthContext';
 
 // ==============================|| MAIN LAYOUT ||============================== //
 
@@ -22,18 +23,14 @@ const MainLayout = ({
   onFarmSelect,
   onSeasonSelect,
   onFillingSelect,
-  onValueSelect,
-  // handleCoordinatesChange,
-  // setIsDialogOpen,
-  // handleMapLoad
+  onValueSelect
 }) => {
+  const { authenticated, logout } = useAuth();
   const theme = useTheme();
   const matchDownLG = useMediaQuery(theme.breakpoints.down('lg'));
   const dispatch = useDispatch();
 
-  // const apiKey = process.env.REACT_APP_GOOGLE_KEY;
-  // const navigate = useNavigate();
-  // const jwtToken = Cookies.get("jwt");
+  const navigate = useNavigate();
 
   const { drawerOpen } = useSelector((state) => state.menu);
   const [selectedFarm, setSelectedFarm] = useState(null);
@@ -41,9 +38,6 @@ const MainLayout = ({
   const handleSelectedFarm = (farm) => {
     setSelectedFarm(farm);
   };
-
-  // let [mainMap, setMainMap] = useState(null);
-  // const [coordinates, setCoordinates] = useState(null);
 
   // drawer toggler
   const [open, setOpen] = useState(drawerOpen);
@@ -65,41 +59,35 @@ const MainLayout = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drawerOpen]);
 
-  const jwtToken = Cookies.get("jwt");
-  const navigate = useNavigate();
-  const apiKey = process.env.REACT_APP_GOOGLE_KEY;
 
   useEffect(() => {
+    const jwtToken = Cookies.get('jwt');
+    if (!jwtToken) {
+      console.log("no jwt token");
+      logout();
+      navigate('/auth/login');
+      return;
+    }
     getUser();
-  }, [apiKey, jwtToken]);
-
-  // useEffect(() => {
-  //   const script = document.createElement('script');
-  //   script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=drawing,geometry,places`;
-  //   script.async = true;
-  //   script.defer = true;
-  //   document.body.appendChild(script);
-
-  //   return () => {
-  //     document.body.removeChild(script);
-  //   }
-  // }, []);
+  }, [authenticated, navigate]);
 
   const getUser = async () => {
     try {
-      const response = await axios("http://localhost:8000/auth/user/", { withCredentials: true });
-
-      if (response.status !== 200) {
-        navigate("/auth/login");
+      const response = await axios.get('http://localhost:8000/auth/user/', {
+        withCredentials: true,
+      });
+      const user = response.data;
+      if (user) {
+        console.log("user", user);
       } else {
-        console.log(response.data);
+        logout();
+        navigate('/auth/login');
       }
     } catch (error) {
-      console.error("An error occurred", error);
+      logout();
+      navigate('/auth/login');
     }
   };
-
-
 
   return (
     <Box sx={{ display: 'flex', width: '100%' }}>

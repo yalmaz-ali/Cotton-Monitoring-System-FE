@@ -97,7 +97,7 @@ const Profile = () => {
 
   const getUser = async () => {
     try {
-      const response = await axios("http://localhost:8000/auth/user/", { withCredentials: true });
+      const response = await axios.get("http://localhost:8000/auth/user/", { withCredentials: true });
 
       if (response.status === 200) {
         // const data = await response.json();
@@ -150,7 +150,7 @@ const Profile = () => {
 
     return {
       sx: {
-        bgcolor: '#407274',
+        bgcolor: '#42b33b',
       },
       children: initials,
     };

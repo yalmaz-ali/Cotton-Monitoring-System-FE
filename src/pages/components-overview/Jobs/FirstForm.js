@@ -30,7 +30,7 @@ import ClearSharpIcon from '@mui/icons-material/ClearSharp';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
-        backgroundColor: theme.palette.common.black,
+        backgroundColor: '#53b84d',
         color: theme.palette.common.white,
     },
     [`&.${tableCellClasses.body}`]: {
@@ -140,7 +140,7 @@ function FirstForm(props) {
                                         Total (Ha)
                                     </TableCell>
                                     <TableCell align="right">
-                                        {props.totalArea}
+                                        {props.totalArea.toFixed(3)}
                                     </TableCell>
                                 </TableRow>
                             </TableFooter>
@@ -189,7 +189,6 @@ function FirstForm(props) {
                                     props.inputList.map((input) => {
                                         return (
                                             <TableRow key={input.id}>
-                                                {/* //a red cross button to delete the input */}
                                                 <TableCell component="th" scope="row">
                                                     {input.name}
                                                 </TableCell>

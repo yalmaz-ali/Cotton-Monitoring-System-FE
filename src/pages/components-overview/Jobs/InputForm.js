@@ -5,6 +5,8 @@ import {
     TextField,
     Select,
     MenuItem,
+    Table,
+    TableBody,
 } from "@mui/material";
 import { FormControl, InputLabel, TableRow, TableCell } from '@mui/material';
 
@@ -98,45 +100,48 @@ function InputForm(props) {
                         </Select>
                     </FormControl>
                 </div>
-                <TableRow>
-                    <TableCell>
-                        <Typography variant="subtitle1" component="div">
-                            FIELD JOB AREA
-                        </Typography>
-                    </TableCell>
-                    <TableCell align="right">
-                        {props.totalArea}Ha
-                    </TableCell>
-                </TableRow>
-                <br />
-                <TableRow>
-                    <TableCell>
-                        <TextField
-                            label="Rate per Ha"
-                            variant="outlined"
-                            type="number"
-                            value={props.ratePerHectare}
-                            onChange={props.handleSetRatePerHectare}
-                            disabled={props.selectedUnit === "" || props.totalArea === 0}
-                            inputProps={{ min: 0 }}
-                        />
-                        <Typography variant="subtitle2" component="div">
-                            {props.selectedUnit === "" ? "" : `(${props.units.find((unit) => unit.name === props.selectedUnit).short_form})`}
-                        </Typography>
-                    </TableCell>
-                    <TableCell>
-                        <TextField
-                            label="Total"
-                            variant="outlined"
-                            type="number"
-                            value={props.totalInput}
-                            disabled
-                        />
-                        <Typography variant="subtitle2" component="div">
-                            {props.selectedUnit === "" ? "" : `(${props.units.find((unit) => unit.name === props.selectedUnit).short_form})`}
-                        </Typography>
-                    </TableCell>
-                </TableRow>
+                <Table>
+                    <TableBody>
+                        <TableRow>
+                            <TableCell>
+                                <Typography variant="subtitle1" component="div">
+                                    FIELD JOB AREA
+                                </Typography>
+                            </TableCell>
+                            <TableCell align="right">
+                                {props.totalArea.toFixed(3)} Ha
+                            </TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell style={{ paddingTop: '20px' }}> {/* Adjust padding as needed */}
+                                <TextField
+                                    label="Rate per Ha"
+                                    variant="outlined"
+                                    type="number"
+                                    value={props.ratePerHectare}
+                                    onChange={props.handleSetRatePerHectare}
+                                    disabled={props.selectedUnit === "" || props.totalArea === 0}
+                                    inputProps={{ min: 0 }}
+                                />
+                                <Typography variant="subtitle2" component="div">
+                                    {props.selectedUnit === "" ? "" : `(${props.units.find((unit) => unit.name === props.selectedUnit).short_form})`}
+                                </Typography>
+                            </TableCell>
+                            <TableCell style={{ paddingTop: '20px' }}>
+                                <TextField
+                                    label="Total"
+                                    variant="outlined"
+                                    type="number"
+                                    value={props.totalInput}
+                                    disabled
+                                />
+                                <Typography variant="subtitle2" component="div">
+                                    {props.selectedUnit === "" ? "" : `(${props.units.find((unit) => unit.name === props.selectedUnit).short_form})`}
+                                </Typography>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
                 {props.totalArea === 0 ? (
                     <Typography variant="subtitle2" component="div" style={{ color: "red" }}>
                         Please select any fields to add inputs
@@ -149,78 +154,88 @@ function InputForm(props) {
                         <h3 style={{
                             textAlign: "center",
                         }}>Nutrient Content</h3>
-                        <TableRow>
-                            <TableCell>
-                                <TextField
-                                    label="N %"
-                                    variant="outlined"
-                                    type="number"
-                                    value={props.n1}
-                                    onChange={(e) => props.setN1(e.target.value)}
-                                    inputProps={{ min: 0 }}
-                                />
-                            </TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>
-                                <TextField
-                                    label="P - P2O5 %"
-                                    variant="outlined"
-                                    type="number"
-                                    value={props.n2}
-                                    onChange={(e) => props.setN2(e.target.value)}
-                                    inputProps={{ min: 0 }}
-                                />
-                            </TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>
-                                <TextField
-                                    label="K - K2O %"
-                                    variant="outlined"
-                                    type="number"
-                                    value={props.n3}
-                                    onChange={(e) => props.setN3(e.target.value)}
-                                    inputProps={{ min: 0 }}
-                                />
-                            </TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>
-                                <TextField
-                                    label="Na - Na2O %"
-                                    variant="outlined"
-                                    type="number"
-                                    value={props.n4}
-                                    onChange={(e) => props.setN4(e.target.value)}
-                                    inputProps={{ min: 0 }}
-                                />
-                            </TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>
-                                <TextField
-                                    label="MgO %"
-                                    variant="outlined"
-                                    type="number"
-                                    value={props.n5}
-                                    onChange={(e) => props.setN5(e.target.value)}
-                                    inputProps={{ min: 0 }}
-                                />
-                            </TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>
-                                <TextField
-                                    label="S - SO3 %"
-                                    variant="outlined"
-                                    type="number"
-                                    value={props.n6}
-                                    onChange={(e) => props.setN6(e.target.value)}
-                                    inputProps={{ min: 0 }}
-                                />
-                            </TableCell>
-                        </TableRow>
+                        <Table>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell>
+                                        <TextField
+                                            fullWidth
+                                            label="N %"
+                                            variant="outlined"
+                                            type="number"
+                                            value={props.n1}
+                                            onChange={(e) => props.setN1(e.target.value)}
+                                            inputProps={{ min: 0 }}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell>
+                                        <TextField
+                                            fullWidth
+                                            label="P - P2O5 %"
+                                            variant="outlined"
+                                            type="number"
+                                            value={props.n2}
+                                            onChange={(e) => props.setN2(e.target.value)}
+                                            inputProps={{ min: 0 }}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell>
+                                        <TextField
+                                            fullWidth
+                                            label="K - K2O %"
+                                            variant="outlined"
+                                            type="number"
+                                            value={props.n3}
+                                            onChange={(e) => props.setN3(e.target.value)}
+                                            inputProps={{ min: 0 }}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell>
+                                        <TextField
+                                            fullWidth
+                                            label="Na - Na2O %"
+                                            variant="outlined"
+                                            type="number"
+                                            value={props.n4}
+                                            onChange={(e) => props.setN4(e.target.value)}
+                                            inputProps={{ min: 0 }}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell>
+                                        <TextField
+                                            fullWidth
+                                            label="MgO %"
+                                            variant="outlined"
+                                            type="number"
+                                            value={props.n5}
+                                            onChange={(e) => props.setN5(e.target.value)}
+                                            inputProps={{ min: 0 }}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell>
+                                        <TextField
+                                            fullWidth
+                                            label="S - SO3 %"
+                                            variant="outlined"
+                                            type="number"
+                                            value={props.n6}
+                                            onChange={(e) => props.setN6(e.target.value)}
+                                            inputProps={{ min: 0 }}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
                     </div>
                 ) : (
                     <></>
@@ -255,15 +270,6 @@ function InputForm(props) {
                             props.selectedUnit === "" ||
                             props.ratePerHectare === 0 ||
                             props.totalInput === 0
-                        }
-                        style={
-                            props.inputName === "" ||
-                                props.selectedInputType === "" ||
-                                props.selectedUnit === "" ||
-                                props.ratePerHectare === 0 ||
-                                props.totalInput === 0
-                                ? { backgroundColor: "lightgray", color: "gray", boxShadow: "none" }
-                                : {}
                         }
                     >
                         Add

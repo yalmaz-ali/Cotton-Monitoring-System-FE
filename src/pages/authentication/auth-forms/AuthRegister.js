@@ -20,7 +20,7 @@ import { Formik } from 'formik';
 import AnimateButton from 'components/@extended/AnimateButton';
 import { strengthColor, strengthIndicator } from 'utils/password-strength';
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
-import LoadingScreen from 'components/LoadingScreen';
+import LoadingScreen from 'components/LoadingScreen/index';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 

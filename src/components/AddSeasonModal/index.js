@@ -14,16 +14,20 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import axios from "axios";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
+import LoadingScreen from "../LoadingScreen/index";
+import Cookies from "js-cookie";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-function AddSeasonModal({ open, onClose, selectedFarm, seasonAdded }) {
+function AddSeasonModal({ open, onClose, selectedFarm, seasonAdded, seasonNumber }) {
     const [SeasonName, setSeasonName] = useState("");
     const [StartDate, setStartDate] = useState(null);
     const [EndDate, setEndDate] = useState(null);
     const [CopyFields, setCopyFields] = useState(false);
+
+    const [openLoading, setOpenLoading] = useState(false);
 
     const [snackbar, setSnackbar] = useState({ open: false, type: "", message: "" });
 
@@ -46,6 +50,8 @@ function AddSeasonModal({ open, onClose, selectedFarm, seasonAdded }) {
     }, []);
 
     const handleAddSeason = useCallback(() => {
+        onClose();
+        setOpenLoading(true);
         let copy_fields = "False";
 
         if (CopyFields) {
@@ -62,24 +68,27 @@ function AddSeasonModal({ open, onClose, selectedFarm, seasonAdded }) {
             };
             console.log("data", data);
 
-            axios.post("http://localhost:8000/api/season/", data, { withCredentials: true })
+            axios.post("http://localhost:8000/api/season/", data, {
+                headers: {
+                    'X-CSRFToken': Cookies.get('csrftoken')
+                }, withCredentials: true
+            })
                 .then((response) => {
                     openSnackbar("success", "Season Added!");
                     console.log(response.data);
                     seasonAdded(true);
-                    onClose(); // Close the modal
+                    setOpenLoading(false);
                 })
                 .catch((error) => {
-                    // Handle error
                     openSnackbar("error", "Error adding Season!");
-                    onClose();
                     seasonAdded(false);
                     console.error("Error adding Season:", error);
+                    setOpenLoading(false);
                 });
         }
         else {
             openSnackbar("warning", "Please Enter Season Name!");
-            onClose();
+            setOpenLoading(false);
         }
     }, [SeasonName, selectedFarm, StartDate, EndDate, CopyFields]);
 
@@ -106,23 +115,31 @@ function AddSeasonModal({ open, onClose, selectedFarm, seasonAdded }) {
                                 label="Start Date"
                                 value={StartDate}
                                 onChange={(newValue) => setStartDate(newValue)}
-                                renderInput={(params) => <TextField {...params} />}
+                                inputFormat="MM/dd/yyyy"
+                                componentsProps={{
+                                    input: { variant: 'outlined' }
+                                }}
                             />
                             <DatePicker
                                 sx={{ width: 200, marginLeft: "20px" }}
                                 label="End Date"
                                 value={EndDate}
                                 onChange={(newValue) => setEndDate(newValue)}
-                                renderInput={(params) => <TextField {...params} />}
+                                inputFormat="MM/dd/yyyy"
+                                componentsProps={{
+                                    input: { variant: 'outlined' }
+                                }}
                             />
                         </LocalizationProvider>
                     </div>
-                    <FormControlLabel
-                        control={<Checkbox checked={CopyFields} onChange={(event) => setCopyFields(event.target.checked)} />}
-                        // label={`Copy Fields from ${selectedFarm.name}`}
-                        label={`Copy Fields from ${selectedFarm ? selectedFarm.name : 'none'}`}
+                    {seasonNumber > 0 &&
+                        <FormControlLabel
+                            control={<Checkbox checked={CopyFields} onChange={(event) => setCopyFields(event.target.checked)} />}
+                            // label={`Copy Fields from ${selectedFarm.name}`}
+                            label={`Copy Fields from ${selectedFarm ? selectedFarm.name : 'none'}`}
 
-                    />
+                        />
+                    }
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={onClose} color="secondary">
@@ -147,6 +164,7 @@ function AddSeasonModal({ open, onClose, selectedFarm, seasonAdded }) {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
+            <LoadingScreen openLoading={openLoading} />
         </>
     );
 }

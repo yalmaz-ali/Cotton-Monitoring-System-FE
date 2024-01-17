@@ -1,13 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
 import Map from "../components-overview/component/Map";
 import RenderFields from "pages/components-overview/Fields/RenderFields";
-import LoadingScreen from "components/LoadingScreen";
+import LoadingScreen from "components/LoadingScreen/index";
 import PalleteBar from "components/PalleteBar/index";
 import { createRoot } from 'react-dom/client';
 import { useNavigate, useParams } from "react-router-dom";
-// import { } from "react-router-dom";
 import loading_GIF from "assets/loading_GIF2.gif";
+import Cookies from "js-cookie";
 
 const Fields = ({
   farm,
@@ -30,7 +30,7 @@ const Fields = ({
   const [coordinates, setCoordinates] = useState([]);
   const [gridPoints, setGridPoints] = useState([]);
 
-  let [mainMap, setMainMap] = useState(null);
+  const [mainMap, setMainMap] = useState(null);
   // let [fieldPolygon, setfieldPolygon] = useState(null);
 
   const [polygons, setPolygons] = useState([]);
@@ -39,7 +39,6 @@ const Fields = ({
   const [singleFieldPolygons, setSingleFieldPolygons] = useState([]);
 
   let [deleteWindow, setDeleteWindow] = useState(null);
-  let [ndviWindow, setNdviWindow] = useState(null);
 
   const [fieldData, setFieldData] = useState([]);
   const [dataField, setDataField] = useState([]);
@@ -64,13 +63,10 @@ const Fields = ({
 
 
   // let mainMap;
-  const gridSpacing = 0.000065; // Adjust the spacing as needed
+  const gridSpacing = 0.000085; // Adjust the spacing as needed
   var points = [];
 
-  let ndviColor = "black";
-  let cropColor = "white";
-
-  let selectedPolygon = null; // Track the selected polygon
+  const selectedPolygon = useRef(null);
   const [clickedPolygon, setClickedPolygon] = useState(null); // Define clickedPolygon here
 
 
@@ -139,7 +135,11 @@ const Fields = ({
         },
       };
       try {
-        const response = await axios.post("http://localhost:8000/api/field/", Data, { withCredentials: true });
+        const response = await axios.post("http://localhost:8000/api/field/", Data, {
+          headers: {
+            'X-CSRFToken': Cookies.get('csrftoken')
+          }, withCredentials: true
+        });
         var data = (response.data); // Pass the newly added farm data to the parent component
         console.log("response after adding field:", data);
         openSuccessSB();
@@ -169,31 +169,34 @@ const Fields = ({
     }
   };
 
-  const calculateNDVIAndFieldGrid = async (fieldId, fieldPoints, cropName) => {
+  const calculateNDVIAndFieldGrid = async (fieldId, coordinates, fieldPoints, cropName) => {
     setOpenLoading(true); // start loading
 
     // Define the data to be sent in the POST request
     console.log("calculate, seasonID", selectedSeasonId);
-    console.log("calculate, coordinates", coordinates);
     console.log("calculate, fieldPoints", fieldPoints);
 
-    const formattedCoords = formattedCoordinates(coordinates);
+    const crop = cropName ? cropName : null;
 
     const requestData = {
       Field_Data: {
         season: selectedSeasonId, // Replace with the actual selected season ID
-        coordinates: JSON.stringify(formattedCoords), // Replace with your coordinates data
-        crop_name: cropName,
+        coordinates: JSON.stringify(coordinates), // Replace with your coordinates data
+        crop_name: crop,
       },
       Field_Grid: {
         lat_lng: JSON.stringify(fieldPoints), // Replace with your coordinates data
       },
     };
     console.log("sent........");
-    if (formattedCoords && fieldPoints && cropName) {
+    if (coordinates && fieldPoints) {
       try {
         // Send a POST request to initiate NDVI and field_grid calculation
-        const response = await axios.post(`http://localhost:8000/api/field/putStats/${fieldId}/`, requestData, { withCredentials: true });
+        const response = await axios.post(`http://localhost:8000/api/field/putStats/${fieldId}/`, requestData, {
+          headers: {
+            'X-CSRFToken': Cookies.get('csrftoken')
+          }, withCredentials: true
+        });
         console.log("data ndvi:", response.data);
         fetchFieldData(selectedFarmId, selectedSeasonId);
       } catch (error) {
@@ -242,7 +245,13 @@ const Fields = ({
   async function deleteField(fieldId) {
     setOpenLoading(true); // start loading screen
     try {
-      await axios.delete(`http://localhost:8000/api/field/deleteField/${fieldId}/${selectedSeasonId}/`, { withCredentials: true });
+      await axios.delete(`http://localhost:8000/api/field/deleteField/${fieldId}/${selectedSeasonId}/`,
+        {
+          headers: {
+            'X-CSRFToken': Cookies.get('csrftoken')
+          },
+          withCredentials: true
+        });
       fetchFieldData(selectedFarmId, selectedSeasonId);
     } catch (error) {
       console.error("Error deleting field:", error);
@@ -283,7 +292,7 @@ const Fields = ({
 
     } else {
       console.log("not same");
-      points = CalculatePoints(updatedCoordinates);
+      points = await CalculatePoints(updatedCoordinates);
       data = {
         "Field": {
           "name": name
@@ -308,7 +317,11 @@ const Fields = ({
     console.log("data:", data);
     // Send a patch request to update the polygon data
     try {
-      const response = await axios.patch(`http://localhost:8000/api/field/patchField/${fieldPolygon.id}/${selectedSeasonId}/`, data, { withCredentials: true });
+      const response = await axios.patch(`http://localhost:8000/api/field/patchField/${fieldPolygon.id}/${selectedSeasonId}/`, data, {
+        headers: {
+          'X-CSRFToken': Cookies.get('csrftoken')
+        }, withCredentials: true
+      });
       console.log("fieldUpdated:", response.data);
       fetchFieldData(selectedFarmId, selectedSeasonId);
     } catch (error) {
@@ -400,7 +413,7 @@ const Fields = ({
       "Mung Bean": "#66CDAA",
       "Muskmelon": "#FF00FF",
       "Nectarine": "#FA8072",
-      "No Crop": "#dadada",
+      "No Cotton": "white",
       "Olive": "#808000",
       "Onion": "#8ea2f0",
       "Orange": "#fcad1b",
@@ -514,7 +527,7 @@ const Fields = ({
     }
 
     if (!minStop || !maxStop) {
-      return '#FFFFFF'; // Return white for invalid cases
+      return 'white'; // Return white for invalid cases
     }
 
     // Calculate the percentage interpolation between the stops
@@ -553,49 +566,6 @@ const Fields = ({
       b: bigint & 255,
     };
   }
-
-
-  // const renderSuccessSB = (
-  //   <MDSnackbar
-  //     color="success"
-  //     icon="check"
-  //     title="Field Added"
-  //     content="Your field is added!"
-  //     // dateTime="11 mins ago"
-  //     open={successSB}
-  //     onClose={closeSuccessSB}
-  //     close={closeSuccessSB}
-  //     bgWhite
-  //   />
-  // );
-
-  // const renderErrorSB = (
-  //   <MDSnackbar
-  //     color="error"
-  //     icon="warning"
-  //     title="Error"
-  //     content="Your Field is not added please try again!"
-  //     // dateTime="11 mins ago"
-  //     open={errorSB}
-  //     onClose={closeErrorSB}
-  //     close={closeErrorSB}
-  //     bgWhite
-  //   />
-  // );
-
-  // const renderWarningSB = (
-  //   <MDSnackbar
-  //     color="warning"
-  //     icon="star"
-  //     title="Warning"
-  //     content="Please Select Farm and Season to add Field"
-  //     // dateTime="11 mins ago"
-  //     open={warningSB}
-  //     onClose={closeWarningSB}
-  //     close={closeWarningSB}
-  //     bgWhite
-  //   />
-  // );
 
   function getPolygonCenter(coordinates) {
     if (coordinates.length === 0) {
@@ -641,7 +611,7 @@ const Fields = ({
     });
 
     setNdviMarkers((markers) => [...markers, marker]);
-  }
+  };
 
 
   function ClearMap() {
@@ -660,11 +630,7 @@ const Fields = ({
     });
     setNdviMarkers([]);
 
-    // Clear the previous NDVI markers
-    gridPolygons.forEach((polygon) => {
-      polygon.setMap(null);
-    });
-    setGridPolygons([]);
+    ClearGrid();
 
     singleFieldPolygons.forEach((polygon) => {
       polygon.setMap(null);
@@ -674,34 +640,35 @@ const Fields = ({
   };
 
   function CalculatePoints(polygonCoordinates) {
-    // Calculate grid points within the polygon
-    console.log("polygonCoordinates:", polygonCoordinates);
-    const polygonBounds = new window.google.maps.LatLngBounds();
-    const points = [];
-    polygonCoordinates.forEach((coord) => {
-      polygonBounds.extend(coord);
-    });
+    return new Promise((resolve) => {
+      console.log("polygonCoordinates:", polygonCoordinates);
+      const polygonBounds = new window.google.maps.LatLngBounds();
+      const points = [];
+      polygonCoordinates.forEach((coord) => {
+        polygonBounds.extend(coord);
+      });
 
-    for (
-      let lat = polygonBounds.getSouthWest().lat() + gridSpacing / 2;
-      lat <= polygonBounds.getNorthEast().lat();
-      lat += gridSpacing
-    ) {
       for (
-        let lng = polygonBounds.getSouthWest().lng() + gridSpacing / 2;
-        lng <= polygonBounds.getNorthEast().lng();
-        lng += gridSpacing
+        let lat = polygonBounds.getSouthWest().lat() + gridSpacing / 2;
+        lat <= polygonBounds.getNorthEast().lat();
+        lat += gridSpacing
       ) {
-        const point = { lat, lng };
-        if (typeof lat === "number" && typeof lng === "number") {
-          const latLng = new window.google.maps.LatLng(lat, lng);
-          if (window.google.maps.geometry.poly.containsLocation(latLng, new window.google.maps.Polygon({ paths: polygonCoordinates }))) {
-            points.push(point);
+        for (
+          let lng = polygonBounds.getSouthWest().lng() + gridSpacing / 2;
+          lng <= polygonBounds.getNorthEast().lng();
+          lng += gridSpacing
+        ) {
+          const point = { lat, lng };
+          if (typeof lat === "number" && typeof lng === "number") {
+            const latLng = new window.google.maps.LatLng(lat, lng);
+            if (window.google.maps.geometry.poly.containsLocation(latLng, new window.google.maps.Polygon({ paths: polygonCoordinates }))) {
+              points.push(point);
+            }
           }
         }
       }
-    }
-    return points;
+      resolve(points);
+    });
   }
 
   const [loadingOverlay, setLoadingOverlay] = useState(null);
@@ -755,7 +722,11 @@ const Fields = ({
     try {
       console.log("loadingOverlay:", loadingOverlay);
       const response = await axios.post(`http://localhost:8000/api/field/getPointsNdvi/`, data,
-        { cancelToken: cancelTokenSource.token, withCredentials: true });
+        {
+          headers: {
+            'X-CSRFToken': Cookies.get('csrftoken')
+          }, withCredentials: true
+        });
       console.log("response data:", response.data);
       // RendergridData(response.data.Field_Grid, filling);
       setPastData(response.data.Field_Grid);
@@ -828,111 +799,102 @@ const Fields = ({
 
   }
 
-  function ChangeFilling() {
+  const ClearGrid = () => {
+    isRectangleOnMap = false;
 
-    console.log("polygons:", polygons);
-    console.log("selectedFilling:", selectedFilling);
-
-    console.log("RUN");
-    if (!polygons) {
-      return;
-    }
-    console.log("RUN 2");
-    // Clear the previous NDVI markers
     gridPolygons.forEach((polygon) => {
       polygon.setMap(null);
+      window.google.maps.event.clearInstanceListeners(polygon);
     });
     setGridPolygons([]);
+  };
 
-    polygons.forEach((polygon) => {
-      // Add a click event listener to each polygon
-      polygon.addListener("mousemove", () => {
-        polygon.setOptions({
-          strokeColor: "white",
-          strokeOpacity: 1,
-          strokeWeight: 4,
-        });
-        selectedPolygon = polygon; // Update the selected polygon
-      });
-
-      polygon.addListener("mouseout", () => {
-        if (selectedPolygon) {
-          if (selectedFilling === "No Filling" || selectedFilling === "NDVI" || selectedFilling === "Contrasted NDVI") {
-            selectedPolygon.setOptions({
-              strokeColor: "yellow",
-              strokeOpacity: 1,
-              strokeWeight: 2,
-            });
-          } else if (selectedFilling === "Average NDVI" || selectedFilling === "Crop") {
-            selectedPolygon.setOptions({
-              strokeColor: "black",
-              strokeOpacity: 1,
-              strokeWeight: 1,
-            });
-          }
-        }
-      });
-    });
-
-    if (selectedFilling === "No Filling") {
-      polygons.forEach((polygon) => {
-        polygon.setOptions({
+  const getOptionsBasedOnFilling = (filling, polygon) => {
+    switch (filling) {
+      case "No Filling":
+        return {
           strokeColor: "yellow",
           strokeOpacity: 1,
           strokeWeight: 2,
           fillOpacity: 0,
           clickable: true
-        });
-      });
-    }
-    else if (selectedFilling === "Average NDVI") {
-      polygons.forEach((polygon) => {
-        polygon.setOptions({
+        };
+      case "Average NDVI":
+        return {
           strokeColor: "black",
           strokeOpacity: 1,
           strokeWeight: 1,
           fillColor: polygon.avg_ndvi ? getAvgNdviColor(polygon.avg_ndvi) : "black",
           fillOpacity: 1,
           clickable: true
-        });
-      });
-    }
-    else if (selectedFilling === "NDVI" || selectedFilling === "Contrasted NDVI") {
-
-      polygons.forEach((polygon) => {
-        const field_Grid = polygon.Field_Grid;
-        if (field_Grid !== undefined && field_Grid.length > 0) {
-          polygon.setOptions({
-            strokeColor: "yellow",
-            fillOpacity: 0,
-            clickable: false,
-          });
-          RendergridData(field_Grid, selectedFilling);
-        } else {
-          polygon.setOptions({
-            strokeColor: "yellow",
-            fillOpacity: 0,
-            strokeOpacity: 1,
-            strokeWeight: 2,
-            clickable: false
-          });
-        }
-      });
-    }
-    else if (selectedFilling === "Crop") {
-      polygons.forEach((polygon) => {
-        polygon.setOptions({
+        };
+      case "NDVI":
+      case "Contrasted NDVI":
+        return {
+          strokeColor: "yellow",
+          fillOpacity: 0,
+          clickable: false,
+        };
+      case "Crop":
+        return {
           strokeColor: "black",
           strokeOpacity: 1,
           strokeWeight: 1,
           fillColor: polygon.crop_name ? getCropColor(polygon.crop_name) : "white",
           fillOpacity: 1,
           clickable: true
-        });
-      });
+        };
+      default:
+        return {};
     }
+  };
+  const ChangeFilling = useCallback(() => {
+    if (!polygons) {
+      return;
+    }
+    ClearGrid();
 
-  }
+    const mouseMoveHandler = (polygon) => {
+      polygon.setOptions({
+        strokeColor: "white",
+        strokeOpacity: 1,
+        strokeWeight: 4,
+      });
+      selectedPolygon.current = polygon; // Update the selected polygon
+    };
+
+    const mouseOutHandler = (polygon) => {
+      if (selectedPolygon.current) {
+        const options = ["No Filling", "NDVI", "Contrasted NDVI"].includes(selectedFilling)
+          ? { strokeColor: "yellow", strokeOpacity: 1, strokeWeight: 2 }
+          : { strokeColor: "black", strokeOpacity: 1, strokeWeight: 1 };
+        selectedPolygon.current.setOptions(options);
+      }
+    };
+
+    const listeners = [];
+
+    polygons.forEach((polygon) => {
+      // Add a click event listener to each polygon
+      listeners.push(polygon.addListener("mousemove", () => mouseMoveHandler(polygon)));
+      listeners.push(polygon.addListener("mouseout", () => mouseOutHandler(polygon)));
+
+      const options = getOptionsBasedOnFilling(selectedFilling, polygon);
+      polygon.setOptions(options);
+
+      if (selectedFilling === "NDVI" || selectedFilling === "Contrasted NDVI") {
+        const field_Grid = polygon.Field_Grid;
+        if (field_Grid !== undefined && field_Grid.length > 0) {
+          RendergridData(field_Grid, selectedFilling);
+        }
+      }
+    });
+
+    // Return a cleanup function
+    return () => {
+      listeners.forEach(listener => listener.remove());
+    };
+  }, [polygons, selectedFilling]);
 
   function ChangeSingleFilling() {
     console.log("fieldId", fieldId);
@@ -968,7 +930,7 @@ const Fields = ({
     ClearMap();
     console.log("Before rendering:", fieldData);
 
-    fieldData.forEach((field) => {
+    fieldData.forEach(async (field) => {
       let fieldPolygon = null;
 
       const coordinates = JSON.parse(field.Field_Data.coordinates);
@@ -977,11 +939,6 @@ const Fields = ({
         lat: parseFloat(coord.lat),
         lng: parseFloat(coord.lng),
       }));
-
-      points = CalculatePoints(polygonCoordinates);
-      console.log("points:", points);
-      // Store grid points within the field object
-      field.points = points;
 
       const hasAvgNDVI = typeof field.Field_Data.avg_ndvi === 'number';
 
@@ -1026,6 +983,32 @@ const Fields = ({
       fieldPolygon.id = field.id;
       fieldPolygon.coordinates = polygonCoordinates;
 
+
+      // Create an InfoWindow with a Delete button
+      let deleteWindowContent = `
+        <button id="deleteVertexBtn">Delete</button>
+        `;
+
+      let deleteWindow = new window.google.maps.InfoWindow({
+        content: deleteWindowContent,
+      });
+
+      // Add a click event listener to the "Delete" button
+      let deleteVertexBtn = null;
+      deleteWindow.addListener("domready", function () {
+        deleteVertexBtn = document.getElementById("deleteVertexBtn");
+      });
+
+      // Add a closeclick event listener to remove the click event listener from the delete button
+      deleteWindow.addListener("closeclick", function () {
+        if (deleteVertexBtn) {
+          deleteVertexBtn.removeEventListener("click", deleteVertexHandler);
+          deleteVertexBtn = null;
+        }
+      });
+
+      // The click event handler for the delete button
+      let deleteVertexHandler = null;
       // Add a mouseover or click event listener
       window.google.maps.event.addListener(fieldPolygon, "click", function (event) {
         if (deleteWindow) {
@@ -1037,13 +1020,6 @@ const Fields = ({
         // add the id of FieldPolygon in the url of the page
         navigate(`/Field/${fieldPolygon.id}`, { replace: true });
 
-        // fieldPolygon.setOptions({
-        //   strokeColor: "yellow",
-        //   strokeOpacity: 1,
-        //   strokeWeight: 2,
-        //   fillColor: "transparent",
-        // });
-
         const polygonBounds = new window.google.maps.LatLngBounds();
         fieldPolygon.coordinates.forEach((coord) => {
           polygonBounds.extend(coord);
@@ -1054,37 +1030,26 @@ const Fields = ({
         if (event.vertex !== undefined) { // Check if a vertex was clicked
           const vertexIndex = event.vertex;
 
-
-          // Create an InfoWindow with a Delete button
-          const deleteWindowContent = `
-                      <button id="deleteVertexBtn">Delete</button>
-                  `;
-
-          deleteWindow = new window.google.maps.InfoWindow({
-            content: deleteWindowContent,
-          });
-          setDeleteWindow(deleteWindow);
-
-
           deleteWindow.setPosition(event.latLng);
           deleteWindow.open(mainMap);
 
-          deleteWindow.addListener("domready", function () {
+          // Remove the previous click event listener
+          if (deleteVertexBtn && deleteVertexHandler) {
+            deleteVertexBtn.removeEventListener("click", deleteVertexHandler);
+          }
 
-            const deleteVertexBtn = document.getElementById("deleteVertexBtn");
+          // Add a new click event listener
+          deleteVertexHandler = function () {
+            const path = fieldPolygon.getPath();
+            path.removeAt(vertexIndex); // Remove the clicked vertex
 
-            // Add a click event listener to the "Delete" button
-            deleteVertexBtn.addEventListener("click", function () {
-              const path = fieldPolygon.getPath();
-              path.removeAt(vertexIndex); // Remove the clicked vertex
+            // Update the polygon with the modified path
+            fieldPolygon.setPath(path);
 
-              // Update the polygon with the modified path
-              fieldPolygon.setPath(path);
-
-              // Close the InfoWindow
-              deleteWindow.close();
-            });
-          });
+            // Close the InfoWindow
+            deleteWindow.close();
+          };
+          deleteVertexBtn.addEventListener("click", deleteVertexHandler);
         }
 
       });
@@ -1095,8 +1060,11 @@ const Fields = ({
 
       console.log("field.isCalculating:", field.isCalculating);
       if (field.isCalculating === true) {
-        console.log("Setting gridPoints");
-        gridPointsCalculate(field);
+        points = await CalculatePoints(polygonCoordinates);
+        console.log("points:", points);
+
+        calculateNDVIAndFieldGrid(field.id, coordinates, points, field.cropName);
+
         field.isCalculating = false;
         checkForAvgNDVI(field);
       }
@@ -1108,8 +1076,8 @@ const Fields = ({
     if (mainMap) {
       mainMap.addListener("click", () => {
 
-        if (selectedPolygon) {
-          selectedPolygon = null;
+        if (selectedPolygon.current) {
+          selectedPolygon.current = null;
         }
         if (deleteWindow) {
           deleteWindow.close();
@@ -1124,15 +1092,13 @@ const Fields = ({
   async function checkForAvgNDVI(field) {
     setOpenLoading(true); // start loading screen
 
-    console.log("field.isCalculating:", field.isCalculating);
-    console.log("polygons:", polygons);
     const seasonId = selectedSeasonId;
     let itr = 0;
 
     // Define an interval to check for avg_ndvi data every few seconds
     const interval = setInterval(async () => {
       itr = itr + 1;
-      if (itr === 50) {
+      if (itr === 20) {
         clearInterval(interval);
       }
       // Make a request to get the avg_ndvi data for the field by field.id
@@ -1144,7 +1110,7 @@ const Fields = ({
         const avg_ndvi = response.data.avg_ndvi;
         if (avg_ndvi !== null) {
           // If avg_ndvi is available, update the field and stop checking
-          field.Field_Data.avg_ndvi = avg_ndvi;
+          // field.Field_Data.avg_ndvi = avg_ndvi;
           clearInterval(interval);
           // Force a re-render to update the map and remove loading screen
           // ClearMap();
@@ -1162,16 +1128,8 @@ const Fields = ({
     }, 1000); // Check every 1 seconds, you can adjust the interval as needed
   }
 
-  function gridPointsCalculate(currentField) {
-    setGridPoints(currentField.points);
-    console.log("after await gridPoints:", gridPoints);
-
-    // const field = fieldData[fieldData.length - 1];
-    console.log("id:", currentField.id);
-    calculateNDVIAndFieldGrid(currentField.id, currentField.points, currentField.cropName);
-    // fetchNDVIForGridPoints(gridPoints);
-
-  }
+  let ndviWindow = new window.google.maps.InfoWindow();
+  let isRectangleOnMap = false; // Set to true when rectangle is added to the map
 
   function RendergridData(gridPoints, filling) {
     console.log("gridPoints:", gridPoints);
@@ -1216,9 +1174,7 @@ const Fields = ({
       }
 
       rectangle.addListener("mousemove", (event) => {
-        if (ndviWindow) {
-          ndviWindow.close(); // Close any open InfoWindow
-        }
+
 
         var value = ndviValue.toFixed(3); // Replace with your actual NDVI calculation function
 
@@ -1228,11 +1184,7 @@ const Fields = ({
 
         // Create an InfoWindow with the NDVI value
         const ndviWindowContent = `<strong>NDVI:</strong> ${value}`;
-
-        ndviWindow = new window.google.maps.InfoWindow({
-          content: ndviWindowContent,
-          // maxWidth: 150,
-        });
+        ndviWindow.setContent(ndviWindowContent);
 
         // Set the InfoWindow position where the mouse hovered over the rectangle
         // ndviWindow.setPosition(event.latLng);
@@ -1244,273 +1196,14 @@ const Fields = ({
       });
       // Add a mouseout event listener to the map
       rectangle.addListener("mouseout", () => {
-        if (ndviWindow) {
-          ndviWindow.close(); // Close the InfoWindow
-        }
+
+        ndviWindow.close(); // Close the InfoWindow
+
       });
-
     });
+    isRectangleOnMap = true;
+
   };
-
-  // Function to start drawing
-  // const startDrawing = () => {
-  //   console.log("startDrawing");
-  //   // drawingMode = true;
-  //   // drawingPolygon = new window.google.maps.Polygon({
-  //   //   mainMap,
-  //   //   editable: true,
-  //   //   fillColor: '#ffff00',
-  //   //   fillOpacity: 0.5,
-  //   //   clickable: true,
-  //   //   draggable: false,
-  //   // })
-  // };
-
-  // function InitMap() {
-
-
-  //   var Location = new window.google.maps.LatLng(31.402300, 74.210191);
-  //   var mapOptions = {
-  //     zoom: 17,
-  //     center: Location,
-  //     mapTypeId: "hybrid",
-  //     mapTypeControl: false, // Set mapTypeControl to false to remove the map type control
-  //     streetViewControl: false, // Set streetViewControl to false to remove the Pegman control
-  //     zoomControlOptions: { position: window.google.maps.ControlPosition.TOP_LEFT } // Set zoomControlOptions to move the zoom controls to the top left corner
-
-  //   }
-
-  //   mainMap = new window.google.maps.Map(document.getElementById("mapcanvas"), mapOptions);
-  //   setMainMap(mainMap);
-
-  //   var all_overlays = [];
-  //   var selectedShape;
-
-  //   if (drawPolygon) {
-  //     console.log("drawPolygon:", drawPolygon);
-  //     drawingMode = true;
-  //     drawingPolygon = new window.google.maps.Polygon({
-  //       map: mainMap,
-  //       editable: true,
-  //       fillColor: '#ffff00',
-  //       fillOpacity: 0.5,
-  //       clickable: true,
-  //       draggable: false,
-  //     })
-  //   }
-
-  //   var drawingManager = new window.google.maps.drawing.DrawingManager({
-  //     drawingControlOptions: {
-  //       position: window.google.maps.ControlPosition.TOP_CENTER,
-  //       drawingModes: [
-  //         window.google.maps.drawing.OverlayType.POLYGON,
-  //       ]
-  //     },
-  //     polygonOptions: {
-  //       clickable: true,
-  //       draggable: false,
-  //       editable: true,
-  //       fillColor: '#ffff00',
-  //       fillOpacity: 0.5,
-  //     },
-  //   });
-
-  //   function clearSelection() {
-  //     if (selectedShape) {
-  //       selectedShape.setEditable(false);
-  //       selectedShape = null;
-  //     }
-  //   }
-
-  //   //to disable drawing tools
-  //   function stopDrawing() {
-  //     drawingManager.setMap(null);
-  //   }
-
-  //   function setSelection(shape) {
-  //     clearSelection();
-  //     stopDrawing()
-  //     selectedShape = shape;
-  //     shape.setEditable(true);
-  //   }
-
-  //   function deleteSelectedShape() {
-  //     if (selectedShape) {
-  //       selectedShape.setMap(null);
-  //       drawingManager.setMap(mainMap);
-  //       coordinates.splice(0, coordinates.length)
-  //       console.log(coordinates);
-  //       // document.getElementById('info').innerHTML = ""
-  //     }
-  //   }
-
-  //   function addSelectedShape() {
-  //     setIsDialogOpen(true); // Open the dialog for field name input
-  //     // deleteSelectedShape();
-  //     selectedShape.setMap(null);
-  //     drawingManager.setMap(mainMap);
-  //     // document.getElementById('info').innerHTML = ""
-  //     mainMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].pop();
-  //     mainMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].pop();
-  //   }
-
-  //   function CenterControl(controlDiv, mainMap) {
-
-  //     // Set CSS for the control border.
-  //     var controlUI = document.createElement('div');
-  //     controlUI.style.backgroundColor = '#fff';
-  //     controlUI.style.border = '2px solid #fff';
-  //     controlUI.style.borderRadius = '3px';
-  //     controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
-  //     controlUI.style.cursor = 'pointer';
-  //     controlUI.style.marginBottom = '5px';
-  //     controlUI.style.textAlign = 'center';
-  //     controlUI.style.width = '70px';
-  //     controlUI.style.marginRight = '10px';
-  //     // controlUI.style.display = 'none';
-  //     controlUI.title = 'Select to delete the poygon';
-  //     controlDiv.appendChild(controlUI);
-
-  //     // Set CSS for the control interior.
-  //     var controlText = document.createElement('div');
-  //     controlText.style.color = 'rgb(25,25,25)';
-  //     controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-  //     controlText.style.fontSize = '13px';
-  //     controlText.style.lineHeight = '28px';
-  //     controlText.style.paddingLeft = '5px';
-  //     controlText.style.paddingRight = '5px';
-  //     controlText.innerHTML = 'Delete';
-  //     controlUI.appendChild(controlText);
-
-  //     //to delete the polygon
-  //     controlUI.addEventListener('click', function () {
-  //       mainMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].pop();
-  //       mainMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].pop();
-  //       deleteSelectedShape();
-  //     });
-  //   }
-
-  //   function CenterControl2(controlDiv, mainMap) {
-
-  //     // Set CSS for the control border.
-  //     var addUI = document.createElement('div');
-  //     addUI.style.backgroundColor = '#fff';
-  //     addUI.style.border = '2px solid #fff';
-  //     addUI.style.borderRadius = '3px';
-  //     addUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
-  //     addUI.style.cursor = 'pointer';
-  //     addUI.style.marginBottom = '5px';
-  //     addUI.style.textAlign = 'center';
-  //     addUI.style.width = '70px';
-  //     // addUI.style.display = 'none';
-  //     addUI.title = 'Select to add the shape';
-  //     controlDiv.appendChild(addUI);
-
-  //     // Set CSS for the control interior.
-  //     var addText = document.createElement('div');
-  //     addText.style.color = 'rgb(25,25,25)';
-  //     addText.style.fontFamily = 'Roboto,Arial,sans-serif';
-  //     addText.style.fontSize = '13px';
-  //     addText.style.lineHeight = '28px';
-  //     addText.style.paddingLeft = '5px';
-  //     addText.style.paddingRight = '5px';
-  //     addText.innerHTML = 'Add';
-  //     addUI.appendChild(addText);
-
-  //     //to delete the polygon
-  //     addUI.addEventListener('click', function () {
-  //       addSelectedShape();
-
-  //     });
-  //   }
-
-  //   drawingManager.setMap(mainMap);
-
-  //   var getPolygonCoords = function (newShape) {
-
-  //     coordinates.splice(0, coordinates.length)
-  //     console.log(coordinates)
-
-  //     var len = newShape.getPath().getLength();
-
-  //     for (var i = 0; i < len; i++) {
-  //       coordinates.push(newShape.getPath().getAt(i).toUrlValue(4))
-  //     }
-  //     // document.getElementById('info').innerHTML = coordinates
-
-
-  //   }
-
-  //   window.google.maps.event.addListener(drawingManager, 'polygoncomplete', function (event) {
-
-  //     mainMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].push(centerControlDiv);
-  //     mainMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].push(centerControlDiv2);
-
-  //     console.log("polygon");
-  //     event.getPath().getLength();
-  //     window.google.maps.event.addListener(event, "dragend", getPolygonCoords(event));
-
-  //     window.google.maps.event.addListener(event.getPath(), 'insert_at', function () {
-  //       getPolygonCoords(event)
-  //     });
-
-  //     window.google.maps.event.addListener(event.getPath(), 'set_at', function () {
-  //       getPolygonCoords(event)
-  //     })
-  //   })
-
-  //   window.google.maps.event.addListener(drawingManager, 'overlaycomplete', function (event) {
-  //     all_overlays.push(event)
-  //     console.log(all_overlays);
-  //     console.log("overlay");
-
-  //     drawingManager.setDrawingMode(null);
-
-  //     var newShape = event.overlay;
-  //     newShape.type = event.type;
-  //     window.google.maps.event.addListener(newShape, 'click', function () {
-  //       console.log("clicked");
-  //       setSelection(newShape);
-  //     });
-  //     setSelection(newShape);
-
-  //   })
-
-  //   var centerControlDiv = document.createElement('div');
-  //   var centerControl = new CenterControl(centerControlDiv, mainMap);
-
-
-  //   var centerControlDiv2 = document.createElement('div');
-  //   var centerControl2 = new CenterControl2(centerControlDiv2, mainMap);
-
-
-  //   // centerControlDiv.index = 1;
-
-  //   // RenderFieldData();
-
-  // };
-
-  // useEffect(() => {
-  //   console.log(jwtToken);
-  //   console.log(selectedFarmId);
-
-  //   // If the JWT token is not present, redirect to the sign-in page
-  //   if (!jwtToken) {
-  //     navigate("/auth/login");
-  //     // return null; // Or show a loading indicator
-  //   }
-
-  //   const script = document.createElement("script");
-  //   script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=drawing,geometry&callback=InitMap`;
-  //   script.async = true;
-  //   script.defer = true;
-  //   window.InitMap = InitMap;
-  //   document.head.appendChild(script);
-
-  //   return () => {
-  //     document.head.removeChild(script);
-  //   };
-  // }, [apiKey, jwtToken]);
 
   useEffect(() => {
     if (fieldSelectFlag) {
@@ -1615,7 +1308,21 @@ const Fields = ({
     }
   }, [value])
 
+  useEffect(() => {
+    if (polygons.length > 0) {
+      const bounds = new window.google.maps.LatLngBounds();
 
+      polygons.forEach(polygon => {
+        if (Array.isArray(polygon.coordinates)) {
+          polygon.coordinates.forEach(coordPair => {
+            bounds.extend(new window.google.maps.LatLng(coordPair.lat, coordPair.lng));
+          });
+        }
+      });
+
+      mainMap.fitBounds(bounds);
+    }
+  }, [polygons]);
 
   let [selectedShape, setSelectedShape] = useState(null);
   const [latLngCoordinates, setLatLngCoordinates] = useState([]);
@@ -1648,7 +1355,56 @@ const Fields = ({
     setFlagFieldComplete(false);
   }
 
+  const addkmlShape = async (polygon) => {
 
+    console.log("Field Name:", polygon.name);
+    console.log("Selected Farm ID:", selectedFarmId);
+    console.log("Selected Season id:", selectedSeasonId);
+
+    const formattedCoords = polygon.paths.map(coordPair => ({
+      lat: coordPair.lat(),
+      lng: coordPair.lng()
+    }));
+
+    const fieldName = polygon.name;
+
+    if (selectedFarmId !== "" && selectedSeasonId !== "") {
+      const Data = {
+        Field: {
+          name: fieldName,
+          farm: selectedFarmId,
+          coordinates: JSON.stringify(formattedCoords),
+        },
+      };
+      try {
+        const response = await axios.post("http://localhost:8000/api/field/", Data, {
+          headers: {
+            'X-CSRFToken': Cookies.get('csrftoken')
+          },
+          withCredentials: true
+        });
+        var data = (response.data); // Pass the newly added farm data to the parent component
+        console.log("response after adding field:", data);
+        const field = data.Field;
+        const fieldPoints = await CalculatePoints(formattedCoords);
+        console.log("fieldPoints:", fieldPoints);
+        const cropName = null;
+
+        calculateNDVIAndFieldGrid(field.id, formattedCoords, fieldPoints, cropName);
+
+      } catch (error) {
+        console.error("Error adding farm:", error);
+        openErrorSB();
+      } finally {
+        setOpenLoading(false); // stop loading screen
+      }
+
+    } else {
+      setOpenLoading(false); // stop loading screen
+      openWarningSB();
+    }
+
+  };
 
 
   var getPolygonCoords = function (newShape) {
@@ -1731,19 +1487,6 @@ const Fields = ({
   }, [selectedFilling, polygons]);
 
 
-  // useEffect(() => {
-  //   var paletteBarDiv = document.createElement('div');
-  //   ReactDOM.render(<PalleteBar
-  //     filling={selectedFilling}
-  //   />, paletteBarDiv);
-  //   if (mainMap) {
-  //     mainMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].push(paletteBarDiv);
-  //   }
-  // }, [selectedFilling]);
-
-
-
-
   return (
     <>
       <div style={{
@@ -1764,6 +1507,7 @@ const Fields = ({
           addSelectedShape={addSelectedShape}
           onSubmit={(fieldName, cropName) => handleFieldSubmission(fieldName, cropName)}
           mainMap={mainMap}
+          addkmlShape={addkmlShape}
         />
         <Map
           handleMapLoad={handleMapLoad}

@@ -15,11 +15,11 @@ import AutoStoriesOutlinedIcon from '@mui/icons-material/AutoStoriesOutlined';
 
 import fieldIcon from "assets/images/icons/fieldIcon.png";
 import crop_rotation from "assets/images/icons/crop-rotation.png";
-import jobs from "assets/images/icons/jobs.png";
+// import jobs from "assets/images/icons/jobs.png";
 
 const utilities = {
   id: 'utilities',
-  title: ' ',
+  title: '',
   type: 'group',
   children: [
     {
@@ -28,6 +28,13 @@ const utilities = {
       type: 'item',
       url: '/Field',
       icon: AppstoreAddOutlined,
+    },
+    {
+      id: 'utils-SOM',
+      title: 'Soil Organic Matter',
+      type: 'item',
+      url: '/SOM',
+      icon: AutoStoriesOutlinedIcon
     },
     {
       id: 'util-CropRotation',
@@ -41,7 +48,7 @@ const utilities = {
       title: 'Jobs',
       type: 'item',
       url: '/Jobs',
-      icon: jobs
+      icon: BarcodeOutlined
     },
     {
       id: 'utils-guide',
@@ -49,17 +56,10 @@ const utilities = {
       type: 'item',
       url: '/guide',
       icon: BookOutlined,
-      // disabled: true
-
+      // disabled: true,
+      // external: true,
+      // target: true
     },
-    {
-      id: 'utils-logout',
-      title: 'Logout',
-      type: 'item',
-      url: '/logout',
-      icon: LogoutOutlined,
-      disabled: true
-    }
   ]
 };
 

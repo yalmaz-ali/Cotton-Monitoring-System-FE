@@ -51,7 +51,7 @@ function EditForm(
         "Mung Bean",
         "Muskmelon",
         "Nectarine",
-        "No Crop",
+        "No Cotton",
         "Olive",
         "Onion",
         "Orange",

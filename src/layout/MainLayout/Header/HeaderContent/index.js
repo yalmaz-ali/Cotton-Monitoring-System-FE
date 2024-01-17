@@ -42,57 +42,34 @@ const HeaderContent = ({ onFarmSelect, onFillingSelect, onValueSelect, selectedF
     setFilling(filling);
   };
 
-  // const renderWarningSB = (
-  //   <MDSnackbar
-  //     color="warning"
-  //     icon="star"
-  //     title="Warning"
-  //     content="Please Select Farm First"
-  //     // dateTime="11 mins ago"
-  //     open={warningSB}
-  //     onClose={closeWarningSB}
-  //     close={closeWarningSB}
-  //     bgWhite
-  //   />
-  // );
-
   return (
     <>
       {(location.pathname !== '/CropRotation' && !matchesXs) && (
         <Search />
       )}
-
-      {/* <Tooltip
-        title="Select Farm"
-        placement="top"
-        TransitionComponent={Zoom}
-      > */}
-
-      {/* </Tooltip> */}
       {<Box sx={{ width: '100%', ml: 1 }} />}
 
       <Box marginRight={1} marginLeft={1}>
         <FarmDropdownMenu onFarmSelect={handleFarmSelected} />
-        {/* Add Farm Modal */}
       </Box>
 
-      {/* {renderWarningSB} */}
-
-      {location.pathname !== '/CropRotation' && (
+      {(location.pathname !== '/CropRotation' && location.pathname !== '/Jobs' && location.pathname !== '/SOM') && (
         <>
-          {/* <Tooltip title="Select Filling" placement="bottom" TransitionComponent={Zoom} > */}
           <Box marginRight={1} >
             <FillingDropdownMenu onFillingSelect={hanldeFillingSelect} />
           </Box >
-          {/* </Tooltip> */}
-          {/* <Tooltip title="Select Value" placement="bottom" TransitionComponent={Zoom}> */}
           {!fieldId &&
             <Box marginRight={1} >
               <ValueDropdownMenu onValueSelect={onValueSelect} />
             </Box>
           }
-          {/* </Tooltip> */}
         </>
+      )}
+
+      {location.pathname === '/SOM' && (
+        <Box marginRight={1} marginLeft={1}>
+
+        </Box>
       )}
       {fieldId &&
         <Calendar />

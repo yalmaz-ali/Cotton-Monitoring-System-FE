@@ -3,7 +3,7 @@
 export default function Button(theme) {
   const disabledStyle = {
     '&.Mui-disabled': {
-      backgroundColor: theme.palette.grey[400],
+      backgroundColor: '#aad8a7',
       cursor: 'no-drop',
       pointerEvents: 'auto !important',
     }

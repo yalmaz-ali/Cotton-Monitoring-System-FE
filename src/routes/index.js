@@ -19,6 +19,7 @@ const Jobs = Loadable(lazy(() => import('pages/Jobs/Jobs')));
 const Fields = Loadable(lazy(() => import('pages/Fields/Fields')));
 const CropRotation = Loadable(lazy(() => import('pages/Crop Rotation/CropRotation')));
 const Guide = Loadable(lazy(() => import('pages/Guide/Guide')));
+const SOM = Loadable(lazy(() => import('pages/SOM')));
 
 
 function Routes() {
@@ -70,12 +71,10 @@ function Routes() {
         />
       },
       {
-        path: 'guide',
-        element: <Guide />
-      },
-      {
-        path: 'logout',
-        element: <div>Logout</div>
+        path: 'SOM',
+        element: <SOM
+          farm={farm}
+          season={season} />
       }
     ]
   };
@@ -83,6 +82,11 @@ function Routes() {
   const ErrorRoutes = {
     path: '*',
     element: < NotFoundPage />
+  };
+
+  const GuideRoute = {
+    path: '/guide',
+    element: <Guide />
   };
 
   const LoginRoutes = {
@@ -100,7 +104,7 @@ function Routes() {
     ]
   };
 
-  return useRoutes([MainRoutes, LoginRoutes, ErrorRoutes]);
+  return useRoutes([MainRoutes, LoginRoutes, ErrorRoutes, GuideRoute]);
 }
 
 export default Routes;

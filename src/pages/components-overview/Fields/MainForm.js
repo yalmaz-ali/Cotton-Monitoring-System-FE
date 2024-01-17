@@ -64,7 +64,8 @@ function MainForm(
                                     </div>
                                     <div
                                         style={{
-                                            color: "#b50000",
+                                            // color: "#b50000",
+                                            color: "lightgreen",
                                             textOverflow: 'ellipsis',
                                             overflow: 'hidden',
                                             whiteSpace: 'nowrap',
@@ -115,7 +116,7 @@ function MainForm(
                                         {field.Field_Data.crop_name}
                                     </div>
                                     <Tooltip title="NDVI" placement="top">
-                                        <div style={{ color: "green" }}>
+                                        <div style={{ color: "#53b84d" }}>
                                             {field.Field_Data.avg_ndvi ? field.Field_Data.avg_ndvi.toFixed(3) : "N/A"}
                                         </div>
                                     </Tooltip>
@@ -137,11 +138,21 @@ function MainForm(
                 <Button
                     variant="contained"
                     fullWidth
-                    style={{ margin: "5px", color: "white" }}
+                    style={{
+                        margin: "5px",
+                        color: "white",
+                        backgroundColor: "#53b84d",
+                    }}
                     onClick={props.handleAddFieldPopper}
                 >
                     <AddIcon />
-                    <Typography variant="subtitle1" component="div" style={{ color: "white", fontSize: "17px" }}>
+                    <Typography
+                        variant="subtitle1"
+                        component="div"
+                        style={{
+                            color: "white",
+                            fontSize: "17px"
+                        }}>
                         Add Fields
                     </Typography>
                 </Button>
@@ -167,7 +178,12 @@ function MainForm(
 
                             }}
                         >
-                            <Button variant="contained" fullWidth color="primary" style={{ margin: "5px" }}
+                            <Button variant="contained" fullWidth color="primary"
+                                style={{
+                                    margin: "5px",
+                                    backgroundColor: "#53b84d",
+                                    color: "white"
+                                }}
                                 onClick={
                                     props.handleDrawField
                                 }
@@ -176,7 +192,12 @@ function MainForm(
                                     Draw Field
                                 </Typography>
                             </Button>
-                            <Button variant="contained" fullWidth color="primary" style={{ margin: "5px" }}
+                            <Button variant="contained" fullWidth color="primary"
+                                style={{
+                                    margin: "5px",
+                                    backgroundColor: "#53b84d",
+                                    color: "white"
+                                }}
                                 onClick={
                                     props.handleUploadField
                                 }

@@ -11,6 +11,10 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import AddIcon from "@mui/icons-material/Add"; // Import the Add Icon
 import AddSeasonModal from "components/AddSeasonModal/index";
 
+import { useNavigate } from "react-router-dom";
+import { useAuth } from './../../context/auth-context/AuthContext';
+import Cookies from "js-cookie";
+
 
 const styles = {
     formControl: {
@@ -40,9 +44,9 @@ const styles = {
         cursor: "pointer",
         display: "flex",
         justifyContent: "space-between",
-        color: "#3f51b5",
+        color: "#53b84d",
         fontWeight: "bold",
-        backgroundColor: "#e8eaf6",
+        backgroundColor: "#aad8a7",
     },
 };
 
@@ -58,6 +62,40 @@ function SeasonDropdownMenu({ onSeasonSelect, selectedFarm }) {
 
     const [isAddSeasonModalOpen, setAddSeasonModalOpen] = useState(false);
     const farmId = selectedFarm ? selectedFarm.id : null;
+
+    const { authenticated, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const [dropdownClicked, setDropdownClicked] = useState(false);
+
+    useEffect(() => {
+        const jwtToken = Cookies.get('jwt');
+        if (!jwtToken) {
+            console.log("no jwt token");
+            logout();
+            navigate('/auth/login');
+            return;
+        }
+        getUser();
+    }, [authenticated, dropdownClicked]);
+
+    const getUser = async () => {
+        try {
+            const response = await axios.get('http://localhost:8000/auth/user/', {
+                withCredentials: true,
+            });
+            const user = response.data;
+            if (user) {
+                console.log("user", user);
+            } else {
+                logout();
+                navigate('/auth/login');
+            }
+        } catch (error) {
+            logout();
+            navigate('/auth/login');
+        }
+    };
 
     useEffect(() => {
         // Fetch farm names from the API
@@ -100,7 +138,11 @@ function SeasonDropdownMenu({ onSeasonSelect, selectedFarm }) {
     const handleDeleteSeason = (seasonId) => {
         // Send a request to delete the farm with the specified ID
         axios
-            .delete(`http://localhost:8000/api/season/${seasonId}/`, { withCredentials: true })
+            .delete(`http://localhost:8000/api/season/${seasonId}/`, {
+                headers: {
+                    'X-CSRFToken': Cookies.get('csrftoken')
+                }, withCredentials: true
+            })
             .then(() => {
                 axios
                     .get(`http://localhost:8000/api/season/getSeason/${farmId}/`, { withCredentials: true })
@@ -126,6 +168,7 @@ function SeasonDropdownMenu({ onSeasonSelect, selectedFarm }) {
     };
 
     const handleMenuClick = () => {
+        setDropdownClicked(!dropdownClicked);
         if (farmId !== null && farmId !== undefined) {
             axios
                 .get(`http://localhost:8000/api/season/getSeason/${farmId}/`, { withCredentials: true })
@@ -171,7 +214,11 @@ function SeasonDropdownMenu({ onSeasonSelect, selectedFarm }) {
                 .patch(
                     `http://localhost:8000/api/season/${selectedSeasonId}/`,
                     requestData, // Include start_date and end_date in the request data
-                    { withCredentials: true }
+                    {
+                        headers: {
+                            'X-CSRFToken': Cookies.get('csrftoken')
+                        }, withCredentials: true
+                    }
                 )
                 .then(() => {
                     // Reload the season names
@@ -206,66 +253,65 @@ function SeasonDropdownMenu({ onSeasonSelect, selectedFarm }) {
 
     return (
         <FormControl style={styles.formControl}>
-            <Tooltip title="Select Season" placement="right">
-                <Select
-                    onClick={handleMenuClick}
-                    value={season}
-                    onChange={handleChange}
-                    displayEmpty
-                    style={{ height: "100%" }}
-                    IconComponent={() => {
-                        if (season) {
-                            return (
-                                <EditIcon
-                                    // fontSize="small"
-                                    style={{ cursor: "pointer", marginRight: 5 }}
-                                    onClick={() => handleEditSeasonName(season)}
-                                />
-                            );
-                        } else {
-                            return <ExpandMoreIcon fontSize="medium" />;
-                        }
-                    }}
-                    MenuProps={{
-                        PaperProps: {
-                            style: {
-                                maxHeight: 200
-                            },
+            <Select
+                onClick={handleMenuClick}
+                value={season}
+                onChange={handleChange}
+                displayEmpty
+                style={{ height: "100%" }}
+                IconComponent={() => {
+                    if (season) {
+                        return (
+                            <EditIcon
+                                // fontSize="small"
+                                style={{ cursor: "pointer", marginRight: 5 }}
+                                onClick={() => handleEditSeasonName(season)}
+                            />
+                        );
+                    } else {
+                        return <ExpandMoreIcon fontSize="medium" />;
+                    }
+                }}
+                MenuProps={{
+                    PaperProps: {
+                        style: {
+                            maxHeight: 200
                         },
-                    }}
-                // disabled={!farmId || seasonNames.length === 0} // Disable when no farm is selected
-                >
-                    {seasonNames.length === 0 && (
-                        <MenuItem value="">
-                            <em>Season</em>
-                        </MenuItem>
-                    )}
-                    {seasonNames.map((seasonName) => (
-                        <MenuItem key={seasonName.id} value={seasonName.id}>
-                            <div style={styles.menuItemContainer}>
-                                <div style={styles.ellipsis}>{seasonName.name}</div>
-                                <DeleteIcon
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() => handleDeleteSeason(seasonName.id)}
-                                />
-                            </div>
-                        </MenuItem>
-                    ))}
-                    <MenuItem
-                        value=" "
-                        onClick={handleOpenAddSeasonModal}
-                        style={styles.addSeasonButton}
-                    >
-                        <div>Add Season</div>
-                        <AddIcon fontSize="small" />
+                    },
+                }}
+            // disabled={!farmId || seasonNames.length === 0} // Disable when no farm is selected
+            >
+                {seasonNames.length === 0 && (
+                    <MenuItem value="">
+                        <em>Season</em>
                     </MenuItem>
-                </Select>
-            </Tooltip>
+                )}
+                {seasonNames.map((seasonName) => (
+                    <MenuItem key={seasonName.id} value={seasonName.id}>
+                        <div style={styles.menuItemContainer}>
+                            <div style={styles.ellipsis}>{seasonName.name}</div>
+                            <DeleteIcon
+                                style={{ cursor: "pointer" }}
+                                onClick={() => handleDeleteSeason(seasonName.id)}
+                            />
+                        </div>
+                    </MenuItem>
+                ))}
+                <MenuItem
+                    value=" "
+                    onClick={handleOpenAddSeasonModal}
+                    style={styles.addSeasonButton}
+                >
+                    <div>Add Season</div>
+                    <AddIcon fontSize="small" />
+                </MenuItem>
+            </Select>
             <AddSeasonModal
                 open={isAddSeasonModalOpen}
                 onClose={handleCloseAddSeasonModal}
                 selectedFarm={selectedFarm}
                 seasonAdded={seasonAdded}
+                seasonNumber={seasonNames.length}
             />
             <Dialog open={isEditingSeason} onClose={() => setIsEditingSeason(false)}>
                 <DialogTitle>Edit Season</DialogTitle>

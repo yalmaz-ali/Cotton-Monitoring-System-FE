@@ -22,7 +22,7 @@ import { Formik } from 'formik';
 import AnimateButton from 'components/@extended/AnimateButton';
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import { useAuth } from 'context/auth-context/AuthContext';
-import LoadingScreen from 'components/LoadingScreen';
+import LoadingScreen from 'components/LoadingScreen/index';
 import axios from '../../../../node_modules/axios/index';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
@@ -69,7 +69,11 @@ const AuthLogin = () => {
         const jwtToken = data.jwt;
         console.log(data);
 
-        login(jwtToken);
+        let expiration = 5;
+        if (checked) {
+          expiration = 365;
+        }
+        login(jwtToken, expiration);
 
         // Redirect to the field page
         navigate('/Field');
@@ -88,7 +92,7 @@ const AuthLogin = () => {
     } finally {
       setOpenLoading(false);
     }
-  }, [email, password]);
+  }, [email, password, checked]);
 
   const handleEmailChange = useCallback((e) => {
     setEmail(e.target.value);

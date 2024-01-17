@@ -1,12 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { React, useEffect, useRef } from 'react';
 import { useMediaQuery } from '@mui/material';
+import { useLocation } from 'react-router-dom';
 
 function Map({
     handleMapLoad,
     handleDrawingManager,
 }) {
-
+    const location = useLocation();
     const matchesXs = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
     const mapRef = useRef(null);
@@ -125,11 +126,17 @@ function Map({
         InitMap();
     }, []);
 
+    let width;
+    if (location.pathname === '/SOM') {
+        width = "100%";
+    } else {
+        width = matchesXs ? "50%" : "70%";
+    }
 
     return (
         <div id="map" style={{
             height: "100%",
-            width: matchesXs ? "50%" : "70%",
+            width: width,
             position: "relative"
         }}>
         </div>

@@ -62,7 +62,7 @@ function PalleteBar(props) {
         "#66CDAA": "Mung Bean",
         "#FF00FF": "Muskmelon",
         "#FA8072": "Nectarine",
-        "#dadada": "No Crop",
+        "white": "No Cotton",
         "#808000": "Olive",
         "#8ea2f0": "Onion",
         "#fcad1b": "Orange",
@@ -93,7 +93,7 @@ function PalleteBar(props) {
     };
 
     function getCropNameByColor(color) {
-        const cropName = cropColors[color] || "No Crop"; // Returns crop name or 'Unknown Crop' if not found
+        const cropName = cropColors[color]; // Returns crop name or 'Unknown Crop' if not found
         console.log(cropName);
         return cropName;
     }
