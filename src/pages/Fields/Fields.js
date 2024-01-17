@@ -909,17 +909,94 @@ const Fields = ({
       polygon.setMap(null);
     });
     setSingleFieldPolygons([]);
-
+    
     if (selectedFilling === "NDVI" || selectedFilling === "Contrasted NDVI") {
       if (pastData) {
         RendergridData(pastData, selectedFilling);
       }
-    }
-
-    if(selectedFilling === "SOM"){
-      ShowSom();
+    }else if(selectedFilling === "SOM"){
+      fetchSom();
     }
   };
+
+  async function fetchSom(){
+    console.log(clickedPolygon);
+    
+    const polygonBounds = new window.google.maps.LatLngBounds();
+    clickedPolygon.coordinates.forEach((coord) => {
+      polygonBounds.extend(coord);
+    });
+
+    console.log("loadingOverlay:", loadingOverlay);
+    if (loadingOverlay) {
+      loadingOverlay.setMap(null);
+    }
+
+    // Add a new overlay with the loading GIF
+    const overlay = new window.google.maps.GroundOverlay(
+      loading_GIF,
+      polygonBounds
+    );
+    overlay.setMap(mainMap);
+
+    setLoadingOverlay(overlay);
+
+
+    const data={
+      coordinates:JSON.stringify (clickedPolygon.coordinates),
+      date : date
+    }
+  console.log("data", data);
+  try {
+    const response = await axios.post(`http://localhost:8000/api/field/getSOMPrediction/`, data, {
+      headers: {
+        'X-CSRFToken': Cookies.get('csrftoken')
+      },
+      withCredentials: true
+    });
+    console.log("Respoonse SOM:", response.data);
+    showSOM(response.data.prediction);
+    }catch (error) {
+        console.error("Error updating field:", error);
+    }  finally {
+      overlay.setMap(null);
+      if (loadingOverlay) {
+        loadingOverlay.setMap(null);
+      }
+    }
+      
+  }
+
+  function showSOM(value){
+    console.log(clickedPolygon);
+    console.log(value);
+    if(value==='high'){
+      clickedPolygon.setOptions({
+        strokeColor:'green',
+        fillColor: 'green',
+        fillOpacity:1
+      });
+    } else if(value==='low'){
+      clickedPolygon.setOptions({
+        strokeColor:'lightbrown',
+        fillColor: 'lightbrown',
+        fillOpacity:1
+      });
+    } else if(value==='moderate'){
+      clickedPolygon.setOptions({
+        strokeColor:'brown',
+        fillColor: 'brown',
+        fillOpacity:1
+      });
+    }else if(value==='adequate'){
+      clickedPolygon.setOptions({
+        strokeColor:'lightgreen',
+        fillColor: 'lightgreen',
+        fillOpacity:1
+      });
+    } 
+
+  }
 
   useEffect(() => {
     if (clickedPolygon) {

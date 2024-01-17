@@ -117,7 +117,7 @@ function PalleteBar(props) {
                 display: display
             }}
         >
-            {filling !== 'Crop' ?
+            {(filling === 'Average NDVI'||filling === 'NDVI'||filling === 'Contrasted NDVI') ?
                 <div
                     style={{
                         display: "flex",
