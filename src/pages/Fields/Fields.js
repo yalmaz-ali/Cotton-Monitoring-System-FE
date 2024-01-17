@@ -916,7 +916,9 @@ const Fields = ({
       }
     }
 
-
+    if(selectedFilling === "SOM"){
+      ShowSom();
+    }
   };
 
   useEffect(() => {

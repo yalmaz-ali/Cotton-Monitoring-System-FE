@@ -41,7 +41,8 @@ function FillingDropdownMenu({ onFillingSelect }) {
                     {
                         fieldId ? [
                             <MenuItem value={"NDVI"} key="3">NDVI</MenuItem>,
-                            <MenuItem value={"Contrasted NDVI"} key="4">Contrasted NDVI</MenuItem>
+                            <MenuItem value={"Contrasted NDVI"} key="4">Contrasted NDVI</MenuItem>,
+                            <MenuItem value={"SOM"} key="6">SOM</MenuItem>
                         ] : [
                             <MenuItem value={"No Filling"} key="1">No Filling</MenuItem>,
                             <MenuItem value={"Average NDVI"} key="2">Average NDVI</MenuItem>,
