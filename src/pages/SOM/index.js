@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Map from '../components-overview/component/Map'
 import LoadingScreen from "components/LoadingScreen/index";
 import axios from "axios";
 
-const SOM = ({ farm, season }) => {
+const SOM = ({ farm, season, Som }) => {
+
+    const navigate = useNavigate();
+
     const [mainMap, setMainMap] = useState(null); // Map reference state
     const [selectedFarmId, setSelectedFarmId] = useState(farm);
     const [selectedSeasonId, setSelectedSeasonId] = useState(season);
@@ -12,6 +16,8 @@ const SOM = ({ farm, season }) => {
     const [openLoading, setOpenLoading] = useState(false);
 
     const [polygons, setPolygons] = useState([]);
+    const [som, setSom] = useState(Som);
+    const [clickedPolygon, setClickedPolygon] = useState(null);
 
     const handleMapLoad = (map) => {
         setMainMap(map); // Update the map reference
@@ -107,7 +113,21 @@ const SOM = ({ farm, season }) => {
             fieldPolygon.id = field.id;
             fieldPolygon.coordinates = polygonCoordinates;
 
+            window.google.maps.event.addListener(fieldPolygon, "click", function (event) {
 
+                setClickedPolygon(fieldPolygon);
+
+                // add the id of FieldPolygon in the url of the page
+                navigate(`/SOM/${fieldPolygon.id}`, { replace: true });
+
+                const polygonBounds = new window.google.maps.LatLngBounds();
+                fieldPolygon.coordinates.forEach((coord) => {
+                    polygonBounds.extend(coord);
+                });
+                mainMap.fitBounds(polygonBounds);
+                mainMap.setZoom(19);
+
+            });
             fieldPolygon.setMap(mainMap);
             console.log("fieldPolygon:", fieldPolygon);
 
@@ -140,6 +160,18 @@ const SOM = ({ farm, season }) => {
     }, [farm, season]);
 
     useEffect(() => {
+        setSom(Som);
+    }, [Som]);
+
+    useEffect(() => {
+        if (mainMap) {
+            mainMap.addListener("click", () => {
+                navigate(`/SOM`, { replace: true });
+            });
+        }
+    }, [mainMap]);
+
+    useEffect(() => {
         if (polygons.length > 0) {
             const bounds = new window.google.maps.LatLngBounds();
 
@@ -164,6 +196,8 @@ const SOM = ({ farm, season }) => {
             <Map
                 handleMapLoad={handleMapLoad}
                 handleDrawingManager={handleDrawingManager}
+                width={"100%"}
+                widthSmall={"100%"}
             />
             <LoadingScreen openLoading={openLoading} />
         </div>

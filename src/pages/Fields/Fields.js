@@ -1512,6 +1512,8 @@ const Fields = ({
         <Map
           handleMapLoad={handleMapLoad}
           handleDrawingManager={handleDrawingManager}
+          width={"70%"}
+          widthSmall={"50%"}
         />
         {/* {renderSuccessSB}
         {renderErrorSB}

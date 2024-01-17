@@ -13,22 +13,18 @@ import FarmDropdownMenu from "components/FarmDropdownMenu";
 import FillingDropdownMenu from "components/FillingDropdownMenu";
 import ValueDropdownMenu from "components/ValueDropdownMenu";
 import Calendar from 'components/Calendar/Calendar';
+import SOMDropDown from 'components/SOMDropDown/index';
+import CalendarSom from "components/CalendarSom/index";
 // import MDSnackbar from 'components/MDSnackbar/index';
 
 
 // ==============================|| HEADER - CONTENT ||============================== //
 
-const HeaderContent = ({ onFarmSelect, onFillingSelect, onValueSelect, selectedFarm }) => {
+const HeaderContent = ({ onFarmSelect, onFillingSelect, onValueSelect, selectedFarm, onChangeSOM }) => {
   const location = useLocation();
-  const { fieldId } = useParams();
+  const { fieldId, SomFieldId, time } = useParams();
 
   const [filling, setFilling] = useState('No Filling');
-
-  const openWarningSB = () => setWarningSB(true);
-  const closeWarningSB = () => setWarningSB(false);
-
-  const [warningSB, setWarningSB] = useState(false);
-
 
   const matchesXs = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
@@ -53,7 +49,7 @@ const HeaderContent = ({ onFarmSelect, onFillingSelect, onValueSelect, selectedF
         <FarmDropdownMenu onFarmSelect={handleFarmSelected} />
       </Box>
 
-      {(location.pathname !== '/CropRotation' && location.pathname !== '/Jobs' && location.pathname !== '/SOM') && (
+      {(location.pathname !== '/CropRotation' && location.pathname !== '/Jobs' && location.pathname !== '/SOM' && !SomFieldId) && (
         <>
           <Box marginRight={1} >
             <FillingDropdownMenu onFillingSelect={hanldeFillingSelect} />
@@ -66,14 +62,17 @@ const HeaderContent = ({ onFarmSelect, onFillingSelect, onValueSelect, selectedF
         </>
       )}
 
-      {location.pathname === '/SOM' && (
+      {(location.pathname === '/SOM' || SomFieldId) && (
         <Box marginRight={1} marginLeft={1}>
-
+          <SOMDropDown
+            onChangeSOM={onChangeSOM}
+          />
         </Box>
       )}
       {fieldId &&
         <Calendar />
       }
+      {SomFieldId && !/^\d{4}$/.test(time) && <CalendarSom />}
       {/* {!matchesXs && <Profile />} */}
       {matchesXs && <MobileSection />}
     </>

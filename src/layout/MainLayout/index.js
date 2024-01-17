@@ -23,7 +23,8 @@ const MainLayout = ({
   onFarmSelect,
   onSeasonSelect,
   onFillingSelect,
-  onValueSelect
+  onValueSelect,
+  onChangeSOM
 }) => {
   const { authenticated, logout } = useAuth();
   const theme = useTheme();
@@ -91,7 +92,7 @@ const MainLayout = ({
 
   return (
     <Box sx={{ display: 'flex', width: '100%' }}>
-      <Header open={open} handleDrawerToggle={handleDrawerToggle} onFarmSelect={onFarmSelect} onFillingSelect={onFillingSelect} onValueSelect={onValueSelect} selectedFarm={handleSelectedFarm} />
+      <Header open={open} handleDrawerToggle={handleDrawerToggle} onFarmSelect={onFarmSelect} onFillingSelect={onFillingSelect} onValueSelect={onValueSelect} selectedFarm={handleSelectedFarm} onChangeSOM={onChangeSOM} />
       <MainDrawer open={open} handleDrawerToggle={handleDrawerToggle} onSeasonSelect={onSeasonSelect} selectedFarm={selectedFarm} />
       <Box
         component="main"

@@ -173,6 +173,8 @@ const Jobs = ({ farm, season }) => {
         <Map
           handleMapLoad={handleMapLoad}
           handleDrawingManager={handleDrawingManager}
+          width={"70%"}
+          widthSmall={"50%"}
         />
       </div>
       <LoadingScreen openLoading={openLoading} />

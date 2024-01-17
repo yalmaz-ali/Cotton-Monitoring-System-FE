@@ -6,6 +6,8 @@ import { useLocation } from 'react-router-dom';
 function Map({
     handleMapLoad,
     handleDrawingManager,
+    width,
+    widthSmall
 }) {
     const location = useLocation();
     const matchesXs = useMediaQuery((theme) => theme.breakpoints.down('md'));
@@ -126,17 +128,11 @@ function Map({
         InitMap();
     }, []);
 
-    let width;
-    if (location.pathname === '/SOM') {
-        width = "100%";
-    } else {
-        width = matchesXs ? "50%" : "70%";
-    }
 
     return (
         <div id="map" style={{
             height: "100%",
-            width: width,
+            width: matchesXs ? widthSmall : width,
             position: "relative"
         }}>
         </div>

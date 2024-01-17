@@ -59,9 +59,9 @@ function Guide() {
                         height: '100%',
                     }}
                 >
-                    <Typography variant="h6">
+                    {/* <Typography variant="h6">
                         Logo
-                    </Typography>
+                    </Typography> */}
                     <Typography
                         variant="h2"
                         style={{

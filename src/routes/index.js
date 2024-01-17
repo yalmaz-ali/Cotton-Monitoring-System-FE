@@ -28,6 +28,7 @@ function Routes() {
   const [filling, setFilling] = useState(null);
   const [flag, setFlag] = useState(null);
   const [value, setValue] = useState(null);
+  const [Som, setSom] = useState(null);
 
   const handleFilling = (filling, flag) => {
     setFilling(filling);
@@ -41,6 +42,7 @@ function Routes() {
       onSeasonSelect={setSeason}
       onFillingSelect={handleFilling}
       onValueSelect={setValue}
+      onChangeSOM={setSom}
     />,
     children: [
       {
@@ -71,10 +73,12 @@ function Routes() {
         />
       },
       {
-        path: 'SOM',
+        path: 'SOM/:SomFieldId?/:time?',
         element: <SOM
           farm={farm}
-          season={season} />
+          season={season}
+          Som={Som}
+        />
       }
     ]
   };

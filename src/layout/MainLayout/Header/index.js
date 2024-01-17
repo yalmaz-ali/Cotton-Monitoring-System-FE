@@ -13,7 +13,7 @@ import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 
 // ==============================|| MAIN LAYOUT - HEADER ||============================== //
 
-const Header = ({ open, handleDrawerToggle, onFarmSelect, onFillingSelect, onValueSelect, selectedFarm }) => {
+const Header = ({ open, handleDrawerToggle, onFarmSelect, onFillingSelect, onValueSelect, selectedFarm, onChangeSOM }) => {
   const theme = useTheme();
   const matchDownMD = useMediaQuery(theme.breakpoints.down('lg'));
 
@@ -33,7 +33,7 @@ const Header = ({ open, handleDrawerToggle, onFarmSelect, onFillingSelect, onVal
       >
         {!open ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
       </IconButton>
-      <HeaderContent onFarmSelect={onFarmSelect} onFillingSelect={onFillingSelect} onValueSelect={onValueSelect} selectedFarm={selectedFarm} />
+      <HeaderContent onFarmSelect={onFarmSelect} onFillingSelect={onFillingSelect} onValueSelect={onValueSelect} selectedFarm={selectedFarm} onChangeSOM={onChangeSOM} />
     </Toolbar>
   );
 
