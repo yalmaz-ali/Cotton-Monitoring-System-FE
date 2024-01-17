@@ -978,8 +978,8 @@ const Fields = ({
       });
     } else if(value==='low'){
       clickedPolygon.setOptions({
-        strokeColor:'lightbrown',
-        fillColor: 'lightbrown',
+        strokeColor:'lightblue',
+        fillColor: 'lightblue',
         fillOpacity:1
       });
     } else if(value==='moderate'){

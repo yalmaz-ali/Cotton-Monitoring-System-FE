@@ -117,7 +117,7 @@ function PalleteBar(props) {
                 display: display
             }}
         >
-            {(filling === 'Average NDVI'||filling === 'NDVI'||filling === 'Contrasted NDVI') ?
+            {(filling === 'Average NDVI'||filling === 'NDVI'||filling === 'Contrasted NDVI') &&
                 <div
                     style={{
                         display: "flex",
@@ -253,7 +253,8 @@ function PalleteBar(props) {
                         </ul>
                     </div>
                 </div>
-                :
+                }
+                {filling==='Crop'&&
                 <div style={{
                     display: 'flex',
                     flexDirection: 'row',
@@ -289,7 +290,92 @@ function PalleteBar(props) {
                         </div>
                     ))}
                 </div>
-            }
+                }
+                {filling==='SOM' &&
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        width: '100%',
+                        height: '100%',
+                        fontSize: '11px',
+                        overflowX: 'hidden',
+                    }}>
+
+                        <div 
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginRight: '10px',
+                                marginLeft: '8px',
+                                fontFamily: "Graphik, Roboto, sans-serif",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: '15px',
+                                    height: '15px',
+                                    borderRadius: '50%',
+                                    backgroundColor: 'green',
+                                    marginRight: '5px',
+                                    marginLeft:'5px'
+                                }}
+                            >
+                            </div>
+                            <span style={{ whiteSpace: 'nowrap' }}>
+                                high
+                            </span>
+                            <div
+                                style={{
+                                    width: '15px',
+                                    height: '15px',
+                                    borderRadius: '50%',
+                                    backgroundColor: 'lightblue',
+                                    marginRight: '5px',
+                                    marginLeft:'5px'
+
+                                }}
+                            >
+                            </div>
+                            <span style={{ whiteSpace: 'nowrap' }}>
+                                low
+                            </span>
+                            <div
+                                style={{
+                                    width: '15px',
+                                    height: '15px',
+                                    borderRadius: '50%',
+                                    backgroundColor: 'brown',
+                                    marginRight: '5px',
+                                    marginLeft:'5px'
+
+                                }}
+                            >
+                            </div>
+                            <span style={{ whiteSpace: 'nowrap' }}>
+                            moderate
+                            </span>
+                            <div
+                                style={{
+                                    width: '15px',
+                                    height: '15px',
+                                    borderRadius: '50%',
+                                    backgroundColor: 'lightgreen',
+                                    marginRight: '5px',
+                                    marginLeft:'5px'
+
+                                }}
+                            >
+                            </div>
+                            <span style={{ whiteSpace: 'nowrap' }}>
+                            adequate
+                            </span>
+                        </div>
+
+                    </div>
+                }
 
         </div>
     );
