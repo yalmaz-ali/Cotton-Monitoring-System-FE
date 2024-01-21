@@ -44,7 +44,7 @@ This React project, "Cotton Crop Monitoring Using Remote Sensing" provides a com
 
 2. **Demo:**
 
-https://github.com/yalmaz-ali/Cotton-Monitoring-System-FE/assets/107612900/7a0406e5-7a23-4f76-aba9-2ac3c05d7766
+https://github.com/yalmaz-ali/Cotton-Monitoring-System-FE/assets/107612900/22456637-ad02-4af6-812c-ec882aef734e
 
 ## Getting Started
 
